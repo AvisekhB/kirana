@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,17 +7,11 @@
     <title>Avisekh Grocery - Order Online</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
         header { background: #2e7d32; color: white; padding: 20px; text-align: center; }
         header h1 { margin: 0; }
         .info-bar { background: #e8f5e9; padding: 10px; text-align: center; font-size: 0.9em; }
         .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        
-        /* Search Bar */
-        .search-container { margin-bottom: 20px; }
-        .search-input { width: 100%; padding: 12px 20px; font-size: 1em; border: 2px solid #2e7d32; border-radius: 25px; outline: none; }
-        .search-input:focus { box-shadow: 0 0 10px rgba(46, 125, 50, 0.3); }
         
         /* Product Grid */
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
@@ -54,8 +49,6 @@
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
         .cart-item button { background: #d32f2f; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
         .total-display { font-size: 1.5em; font-weight: bold; text-align: right; margin: 15px 0; color: #2e7d32; }
-        
-        .no-results { text-align: center; padding: 40px; color: #666; grid-column: 1 / -1; }
     </style>
 </head>
 <body>
@@ -70,11 +63,6 @@
 </div>
 
 <div class="container">
-    <!-- Search Bar -->
-    <div class="search-container">
-        <input type="text" id="search-input" class="search-input" placeholder=" Search for products (e.g., Rice, Sugar, Tea...)">
-    </div>
-    
     <h2 id="loading-msg" style="text-align:center;">Loading products...</h2>
     <div class="products-grid" id="products-grid"></div>
 </div>
@@ -159,8 +147,9 @@
     // ==========================================
     // SUPABASE SETUP
     // ==========================================
-    const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
-    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+        const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
+
 
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -170,7 +159,6 @@
     // ==========================================
     let cart = [];
     let products = [];
-    let filteredProducts = [];
 
     // ==========================================
     // LOAD PRODUCTS
@@ -185,40 +173,15 @@
         }
         
         products = data;
-        filteredProducts = data;
         document.getElementById('loading-msg').style.display = 'none';
         renderProducts();
     }
-
-    // ==========================================
-    // SEARCH FUNCTIONALITY
-    // ==========================================
-    document.getElementById('search-input').addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase().trim();
-        
-        if (searchTerm === '') {
-            filteredProducts = products;
-        } else {
-            filteredProducts = products.filter(product => 
-                product.name.toLowerCase().includes(searchTerm) ||
-                product.category.toLowerCase().includes(searchTerm) ||
-                product.unit.toLowerCase().includes(searchTerm)
-            );
-        }
-        
-        renderProducts();
-    });
 
     function renderProducts() {
         const grid = document.getElementById('products-grid');
         grid.innerHTML = '';
         
-        if (filteredProducts.length === 0) {
-            grid.innerHTML = '<div class="no-results"><h3>No products found</h3><p>Try searching for something else</p></div>';
-            return;
-        }
-        
-        filteredProducts.forEach(p => {
+        products.forEach(p => {
             const card = document.createElement('div');
             card.className = 'product-card';
             
