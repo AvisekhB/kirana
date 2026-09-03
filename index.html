@@ -17,7 +17,6 @@
         .price { color: #2e7d32; font-weight: bold; }
         .controls { display: flex; align-items: center; gap: 0.5rem; }
         .btn { background: #2e7d32; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-        .btn:disabled { background: #ccc; }
         .btn-outline { background: white; color: #2e7d32; border: 1px solid #2e7d32; }
         .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 1rem; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
         .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
@@ -56,7 +55,6 @@
         <button class="btn" onclick="openCheckout()">View Cart & Checkout</button>
     </div>
 
-    <!-- Checkout Modal -->
     <div class="modal" id="checkout-modal">
         <div class="modal-content">
             <h2>Your Cart</h2>
@@ -64,41 +62,24 @@
             <h3 style="text-align: right; margin-top: 1rem;">Total: ₹<span id="modal-total">0</span></h3>
             <hr>
             <form id="checkout-form">
-                <div class="form-group">
-                    <label>Your Name</label>
-                    <input type="text" id="cust-name" required>
-                </div>
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <input type="tel" id="cust-phone" pattern="[0-9]{10}" placeholder="10 digit number" required>
-                </div>
-                <div class="form-group">
-                    <label>Pickup Date</label>
-                    <input type="date" id="pickup-date" required>
-                </div>
-                <div class="form-group">
-                    <label>Pickup Time</label>
-                    <select id="pickup-time" required></select>
-                </div>
-                <div class="form-group">
-                    <label>Payment Method</label>
+                <div class="form-group"><label>Your Name</label><input type="text" id="cust-name" required></div>
+                <div class="form-group"><label>Phone Number</label><input type="tel" id="cust-phone" pattern="[0-9]{10}" placeholder="10 digit number" required></div>
+                <div class="form-group"><label>Pickup Date</label><input type="date" id="pickup-date" required></div>
+                <div class="form-group"><label>Pickup Time</label><select id="pickup-time" required></select></div>
+                <div class="form-group"><label>Payment Method</label>
                     <select id="payment-method" required>
                         <option value="Cash at pickup">Cash at pickup</option>
                         <option value="UPI at pickup">UPI at pickup</option>
                         <option value="Advance UPI (Applez@upi)">Advance UPI (Applez@upi)</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Note (Optional)</label>
-                    <textarea id="cust-note" rows="2"></textarea>
-                </div>
+                <div class="form-group"><label>Note (Optional)</label><textarea id="cust-note" rows="2"></textarea></div>
                 <button type="submit" class="btn" style="width: 100%;">Place Order</button>
                 <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;" onclick="closeCheckout()">Keep Shopping</button>
             </form>
         </div>
     </div>
 
-    <!-- Success Modal -->
     <div class="modal" id="success-modal">
         <div class="modal-content success-screen">
             <h2 style="color: #2e7d32;">Order Placed!</h2>
@@ -117,13 +98,14 @@
         // ==========================================
         const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co/rest/v1/";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { createClient } = window.supabase;
+        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let products = [];
         let cart = [];
 
         async function init() {
-            const { data, error } = await supabase.from('products').select('*').eq('active', true).order('name');
+            const { data, error } = await db.from('products').select('*').eq('active', true).order('name');
             if (error) { document.getElementById('products-list').innerHTML = 'Error loading products: ' + error.message; return; }
             products = data;
             renderProducts();
@@ -204,8 +186,7 @@
         }
 
         function openCheckout() {
-            const itemsDiv = document.getElementById('cart-items');
-            itemsDiv.innerHTML = cart.map(item => `
+            document.getElementById('cart-items').innerHTML = cart.map(item => `
                 <div class="cart-item">
                     <span>${item.name} (${item.pricing_type === 'By-Weight' ? item.displayUnit : item.quantity + ' ' + item.unit})</span>
                     <span>₹${(item.quantity * item.price).toFixed(2)}</span>
@@ -247,7 +228,7 @@
             const total = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
             const orderNumber = 'AG-' + new Date().getTime().toString().slice(-6);
 
-            const { data: orderData, error: orderError } = await supabase.from('orders').insert({
+            const { data: orderData, error: orderError } = await db.from('orders').insert({
                 order_number: orderNumber, customer_name: name, customer_phone: phone,
                 pickup_slot: `${date} ${time}`, payment_method: payment, total: total, note: note
             }).select().single();
@@ -258,7 +239,7 @@
                 order_id: orderData.id, product_id: item.product_id, product_name: item.name,
                 quantity: item.quantity, price_at_order: item.price
             }));
-            const { error: itemsError } = await supabase.from('order_items').insert(items);
+            const { error: itemsError } = await db.from('order_items').insert(items);
             if (itemsError) { alert('Error saving items: ' + itemsError.message); return; }
 
             cart = []; updateCartUI(); closeCheckout();
