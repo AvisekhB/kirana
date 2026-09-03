@@ -4,327 +4,357 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avisekh Grocery - Order Online</title>
-    <!-- Supabase JS v2 -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f8f9fa; color: #333; }
-        header { background: #2e7d32; color: white; padding: 1rem; text-align: center; }
-        header h1 { margin: 0; }
-        .info-bar { background: #e8f5e9; padding: 10px; text-align: center; font-size: 0.9em; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .product-card { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
-        .product-card h3 { margin: 10px 0 5px; font-size: 1.1em; }
-        .product-card p { color: #666; font-size: 0.9em; margin: 5px 0; }
-        .product-card .price { font-weight: bold; color: #2e7d32; font-size: 1.2em; }
-        .add-btn { background: #2e7d32; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; }
-        .add-btn:hover { background: #1b5e20; }
-        
-        /* Cart & Modals */
-        .floating-cart { position: fixed; bottom: 20px; right: 20px; background: #2e7d32; color: white; padding: 15px 25px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 100; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-overlay.active { display: flex; }
-        .modal { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
-        .modal h2 { margin-top: 0; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }
-        
-        /* Form */
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; cursor: pointer; }
-        .btn-secondary { background: white; color: #2e7d32; border: 2px solid #2e7d32; padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; cursor: pointer; margin-top: 10px; }
-        
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .cart-item button { background: #d32f2f; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
-        .total-display { font-size: 1.5em; font-weight: bold; text-align: right; margin: 15px 0; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans">
 
-<header>
-    <h1>Avisekh Grocery</h1>
-    <p>Order Online, Pick Up In Store</p>
-</header>
-<div class="info-bar">
-    Address: Burnpur, West Bengal | Contact: +91 9999999999 | Hours: 9:00 AM - 8:00 PM (Closed Thursdays)
-</div>
+    <!-- Header -->
+    <header class="bg-green-700 text-white p-4 shadow-md">
+        <h1 class="text-2xl font-bold">Avisekh Grocery</h1>
+        <p class="text-sm">Order Online, Pick Up In Store</p>
+        <div class="mt-2 text-xs space-y-1">
+            <p>Address: Burnpur, West Bengal</p>
+            <p>Contact: +91 9999999999</p>
+            <p>Hours: 9:00 AM - 8:00 PM (Closed Thursdays)</p>
+            <p>Pickup: Come to the front counter and give your name.</p>
+        </div>
+    </header>
 
-<div class="container">
-    <h2 id="loading-text">Loading products...</h2>
-    <div class="products-grid" id="products-grid"></div>
-</div>
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 pb-24">
+        <div id="products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <p class="col-span-full text-center text-gray-500">Loading products...</p>
+        </div>
+    </main>
 
-<div class="floating-cart" id="view-cart-btn">
-    Total: ₹<span id="cart-total-float">0</span> | <span id="cart-count-float">0</span> items <br>View Cart & Checkout
-</div>
+    <!-- Floating Cart Button -->
+    <div class="fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-full shadow-lg cursor-pointer hover:bg-green-700 transition" onclick="openCartModal()">
+        <div class="text-right">
+            <p class="font-bold">Total: ₹<span id="cart-total-btn">0</span></p>
+            <p class="text-xs"><span id="cart-count-btn">0</span> items</p>
+        </div>
+        <p class="text-xs mt-1 underline">View Cart & Checkout</p>
+    </div>
 
-<!-- Cart & Checkout Modal -->
-<div class="modal-overlay" id="cart-modal">
-    <div class="modal">
-        <h2>Your Cart</h2>
-        <div id="cart-items-container"></div>
-        <div class="total-display">Total: ₹<span id="cart-total-modal">0</span></div>
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="modal">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative">
+            <button onclick="closeCartModal()" class="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            <h2 class="text-xl font-bold mb-4">Your Cart</h2>
+            
+            <div id="cart-items" class="space-y-2 mb-4">
+                <p class="text-gray-500 text-center">Your cart is empty.</p>
+            </div>
+
+            <div class="border-t pt-4 mb-4">
+                <p class="text-lg font-bold text-right">Total: ₹<span id="cart-total-modal">0</span></p>
+            </div>
+
+            <form id="checkout-form" class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Your Name</label>
+                    <input type="text" id="customer-name" required class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="tel" id="customer-phone" required class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Pickup Date</label>
+                    <input type="date" id="pickup-date" required class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Pickup Time</label>
+                    <select id="pickup-time" required class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                        <option value="18:30">18:30</option>
+                        <option value="19:00">19:00</option>
+                        <option value="19:30">19:30</option>
+                        <option value="20:00">20:00</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Payment Method</label>
+                    <select id="payment-method" required class="mt-1 block w-full border border-gray-300 rounded-md p-2">
+                        <option value="Cash at pickup">Cash at pickup</option>
+                        <option value="UPI at pickup">UPI at pickup</option>
+                        <option value="Advance UPI (Applez@upi)">Advance UPI (Applez@upi)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Note (Optional)</label>
+                    <textarea id="order-note" class="mt-1 block w-full border border-gray-300 rounded-md p-2"></textarea>
+                </div>
+                
+                <button type="submit" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 font-bold">Place Order</button>
+                <button type="button" onclick="closeCartModal()" class="w-full bg-gray-200 text-gray-800 py-2 rounded-md hover:bg-gray-300">Keep Shopping</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal">
+        <div class="bg-white rounded-lg p-6 w-full max-w-sm text-center">
+            <h2 class="text-2xl font-bold text-green-600 mb-2">Order Placed!</h2>
+            <p class="text-gray-600 mb-4">Your order number is:</p>
+            <p id="order-number-display" class="text-3xl font-bold text-gray-800 mb-4 bg-gray-100 p-2 rounded"></p>
+            <p class="text-sm text-gray-600 mb-4">Show this QR code or order number at the counter.</p>
+            <div id="qr-code-container" class="mb-4 flex justify-center"></div>
+            <p id="payment-instruction" class="text-sm text-red-600 font-bold mb-6 hidden">Please pay to Applez@upi and show receipt at counter.</p>
+            <button onclick="resetApp()" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 font-bold">Place Another Order</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // SUPABASE CONFIGURATION - BUG FIXED HERE
+        // ==========================================
+        const { createClient } = supabase;
         
-        <form id="checkout-form">
-            <div class="form-group">
-                <label>Your Name</label>
-                <input type="text" id="customerName" required>
-            </div>
-            <div class="form-group">
-                <label>Phone Number</label>
-                <input type="tel" id="customerPhone" pattern="[0-9]{10}" required>
-            </div>
-            <div class="form-group">
-                <label>Pickup Date</label>
-                <input type="date" id="pickupDate" required>
-            </div>
-            <div class="form-group">
-                <label>Pickup Time</label>
-                <select id="pickupTime" required>
-                    <option value="10:00">10:00 AM</option>
-                    <option value="12:00">12:00 PM</option>
-                    <option value="14:00">02:00 PM</option>
-                    <option value="16:00">04:00 PM</option>
-                    <option value="18:00">06:00 PM</option>
-                    <option value="18:30">06:30 PM</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Payment Method</label>
-                <select id="paymentMethod" required>
-                    <option value="Cash at pickup">Cash at pickup</option>
-                    <option value="UPI at pickup">UPI at pickup</option>
-                    <option value="Advance UPI (Applez@upi)">Advance UPI (Applez@upi)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Note (Optional)</label>
-                <textarea id="orderNote" rows="2"></textarea>
-            </div>
-            <button type="submit" class="btn-primary">Place Order</button>
-            <button type="button" class="btn-secondary" id="keep-shopping-btn">Keep Shopping</button>
-        </form>
-    </div>
-</div>
-
-<!-- Success Modal -->
-<div class="modal-overlay" id="success-modal">
-    <div class="modal" style="text-align: center;">
-        <h2 style="color: #2e7d32; border: none;">Order Placed!</h2>
-        <p>Your order number is:</p>
-        <h1 id="success-order-number" style="color: #2e7d32;"></h1>
-        <p>Show this order number at the counter.</p>
-        <p id="upi-instruction" style="display:none; background: #fff3cd; padding: 10px; border-radius: 5px;">Please pay to <b>Applez@upi</b> and show receipt at counter.</p>
-        <button class="btn-primary" id="place-another-btn">Place Another Order</button>
-    </div>
-</div>
-
-<script>
-    // ==========================================
-    // 1. SUPABASE INITIALIZATION (THE FIX)
-    // ==========================================
-    // REPLACE THESE WITH YOUR ACTUAL CREDENTIALS FROM SUPABASE DASHBOARD > SETTINGS > API
+        // TODO: Replace these with your actual Supabase credentials from Settings > API
         const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
 
-    // This is the correct way to initialize Supabase v2
-    const { createClient } = supabase;
-    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // This creates the proper client instance
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // ==========================================
-    // 2. APP STATE
-    // ==========================================
-    let cart = [];
-    let products = [];
+        // State
+        let products = [];
+        let cart = [];
 
-    // ==========================================
-    // 3. LOAD PRODUCTS
-    // ==========================================
-    async function loadProducts() {
-        const { data, error } = await db
-            .from('products')
-            .select('*')
-            .eq('active', true)
-            .order('name');
+        // DOM Elements
+        const productsContainer = document.getElementById('products-container');
+        const cartTotalBtn = document.getElementById('cart-total-btn');
+        const cartCountBtn = document.getElementById('cart-count-btn');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalModal = document.getElementById('cart-total-modal');
+        const cartModal = document.getElementById('cart-modal');
+        const successModal = document.getElementById('success-modal');
+        const checkoutForm = document.getElementById('checkout-form');
 
-        if (error) {
-            console.error('Error loading products:', error);
-            document.getElementById('loading-text').innerText = 'Failed to load products.';
-            return;
-        }
-
-        products = data;
-        document.getElementById('loading-text').style.display = 'none';
-        renderProducts();
-    }
-
-    function renderProducts() {
-        const grid = document.getElementById('products-grid');
-        grid.innerHTML = '';
-        products.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.innerHTML = `
-                <h3>${p.name}</h3>
-                <p>${p.unit}</p>
-                <div class="price">₹${p.price}${p.pricing_type === 'By-Weight' ? ' / kg' : ''}</div>
-                <button class="add-btn" onclick="addToCart('${p.id}')">Add</button>
-            `;
-            grid.appendChild(card);
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
+            document.getElementById('pickup-date').valueAsDate = new Date();
         });
-    }
 
-    // ==========================================
-    // 4. CART LOGIC
-    // ==========================================
-    window.addToCart = function(productId) {
-        const product = products.find(p => p.id === productId);
-        const existing = cart.find(item => item.id === productId);
-        
-        if (existing) {
-            existing.quantity += 1;
-        } else {
-            cart.push({ ...product, quantity: 1 });
+        async function loadProducts() {
+            try {
+                // FIXED: Using supabaseClient instead of supabase
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('*')
+                    .eq('active', true)
+                    .order('name');
+
+                if (error) throw error;
+
+                products = data;
+                renderProducts();
+            } catch (error) {
+                console.error('Error loading products:', error);
+                productsContainer.innerHTML = '<p class="col-span-full text-center text-red-500">Error loading products. Check console.</p>';
+            }
         }
-        updateCartUI();
-    };
 
-    window.removeFromCart = function(productId) {
-        cart = cart.filter(item => item.id !== productId);
-        updateCartUI();
-        renderCartItems();
-    };
-
-    function updateCartUI() {
-        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-        
-        document.getElementById('cart-total-float').innerText = total.toFixed(2);
-        document.getElementById('cart-count-float').innerText = count;
-        document.getElementById('cart-total-modal').innerText = total.toFixed(2);
-    }
-
-    function renderCartItems() {
-        const container = document.getElementById('cart-items-container');
-        container.innerHTML = '';
-        if (cart.length === 0) {
-            container.innerHTML = '<p>Your cart is empty.</p>';
-            return;
+        function renderProducts() {
+            productsContainer.innerHTML = '';
+            products.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-lg shadow hover:shadow-md transition';
+                card.innerHTML = `
+                    <h3 class="font-bold text-lg">${product.name}</h3>
+                    <p class="text-sm text-gray-500">${product.unit}</p>
+                    <p class="text-green-600 font-bold mt-2">₹${product.price}${product.pricing_type === 'By-Weight' ? ' / kg' : ''}</p>
+                    <button onclick="addToCart('${product.id}')" class="mt-3 w-full bg-green-600 text-white py-1 rounded hover:bg-green-700 text-sm">Add</button>
+                `;
+                productsContainer.appendChild(card);
+            });
         }
-        cart.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'cart-item';
-            div.innerHTML = `
-                <div>
-                    <b>${item.name}</b><br>
-                    <small>${item.quantity} x ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}</small>
-                </div>
-                <button onclick="removeFromCart('${item.id}')">Remove</button>
-            `;
-            container.appendChild(div);
+
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existingItem = cart.find(item => item.product.id === productId);
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ product: product, quantity: 1 });
+            }
+            updateCartUI();
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.product.id !== productId);
+            updateCartUI();
+            renderCartItems();
+        }
+
+        function updateQuantity(productId, change) {
+            const item = cart.find(i => i.product.id === productId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(productId);
+                } else {
+                    updateCartUI();
+                    renderCartItems();
+                }
+            }
+        }
+
+        function updateCartUI() {
+            const total = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            cartTotalBtn.textContent = total.toFixed(2);
+            cartCountBtn.textContent = count;
+            cartTotalModal.textContent = total.toFixed(2);
+        }
+
+        function openCartModal() {
+            renderCartItems();
+            cartModal.classList.add('active');
+        }
+
+        function closeCartModal() {
+            cartModal.classList.remove('active');
+        }
+
+        function renderCartItems() {
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center">Your cart is empty.</p>';
+                return;
+            }
+
+            cartItemsContainer.innerHTML = '';
+            cart.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center bg-gray-50 p-2 rounded';
+                div.innerHTML = `
+                    <div class="flex-1">
+                        <p class="font-bold text-sm">${item.product.name}</p>
+                        <p class="text-xs text-gray-500">₹${item.product.price} x ${item.quantity}</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="updateQuantity('${item.product.id}', -1)" class="bg-gray-200 px-2 rounded">-</button>
+                        <span class="font-bold">${item.quantity}</span>
+                        <button onclick="updateQuantity('${item.product.id}', 1)" class="bg-gray-200 px-2 rounded">+</button>
+                        <button onclick="removeFromCart('${item.product.id}')" class="text-red-500 ml-2 text-sm">Remove</button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(div);
+            });
+        }
+
+        checkoutForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+
+            const name = document.getElementById('customer-name').value;
+            const phone = document.getElementById('customer-phone').value;
+            const date = document.getElementById('pickup-date').value;
+            const time = document.getElementById('pickup-time').value;
+            const paymentMethod = document.getElementById('payment-method').value;
+            const note = document.getElementById('order-note').value;
+            const total = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+            const orderNumber = 'ORD-' + Date.now().toString().slice(-6);
+
+            try {
+                // FIXED: Using supabaseClient for database operations
+                const { data: orderData, error: orderError } = await supabaseClient
+                    .from('orders')
+                    .insert([{
+                        order_number: orderNumber,
+                        customer_name: name,
+                        customer_phone: phone,
+                        pickup_slot: `${date} ${time}`,
+                        payment_method: paymentMethod,
+                        total: total,
+                        note: note,
+                        status: 'New'
+                    }])
+                    .select();
+
+                if (orderError) throw orderError;
+
+                const orderId = orderData[0].id;
+
+                const orderItems = cart.map(item => ({
+                    order_id: orderId,
+                    product_id: item.product.id,
+                    product_name: item.product.name,
+                    quantity: item.quantity,
+                    price_at_order: item.product.price
+                }));
+
+                const { error: itemsError } = await supabaseClient
+                    .from('order_items')
+                    .insert(orderItems);
+
+                if (itemsError) throw itemsError;
+
+                // Show Success Modal
+                document.getElementById('order-number-display').textContent = orderNumber;
+                
+                const paymentInstruction = document.getElementById('payment-instruction');
+                if (paymentMethod === 'Advance UPI (Applez@upi)') {
+                    paymentInstruction.classList.remove('hidden');
+                    document.getElementById('qr-code-container').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=Applez@upi&pn=AvisekhGrocery&am=${total}&cu=INR" alt="UPI QR Code">`;
+                } else {
+                    paymentInstruction.classList.add('hidden');
+                    document.getElementById('qr-code-container').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${orderNumber}" alt="Order QR Code">`;
+                }
+
+                closeCartModal();
+                successModal.classList.add('active');
+
+            } catch (error) {
+                console.error('Error placing order:', error);
+                alert('Failed to place order. Please check console for details.');
+            }
         });
-    }
 
-    // ==========================================
-    // 5. MODAL CONTROLS
-    // ==========================================
-    document.getElementById('view-cart-btn').addEventListener('click', () => {
-        renderCartItems();
-        document.getElementById('cart-modal').classList.add('active');
-    });
-
-    document.getElementById('keep-shopping-btn').addEventListener('click', () => {
-        document.getElementById('cart-modal').classList.remove('active');
-    });
-
-    document.getElementById('place-another-btn').addEventListener('click', () => {
-        cart = [];
-        updateCartUI();
-        document.getElementById('success-modal').classList.remove('active');
-        document.getElementById('checkout-form').reset();
-    });
-
-    // ==========================================
-    // 6. PLACE ORDER (THE CORE FIX)
-    // ==========================================
-    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        if (cart.length === 0) {
-            alert('Your cart is empty!');
-            return;
+        function resetApp() {
+            cart = [];
+            updateCartUI();
+            checkoutForm.reset();
+            document.getElementById('pickup-date').valueAsDate = new Date();
+            successModal.classList.remove('active');
         }
-
-        const btn = e.target.querySelector('button[type="submit"]');
-        btn.innerText = 'Processing...';
-        btn.disabled = true;
-
-        const orderNumber = 'ORD-' + Date.now().toString().slice(-6);
-        const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const pickupSlot = `${document.getElementById('pickupDate').value} ${document.getElementById('pickupTime').value}`;
-        const paymentMethod = document.getElementById('paymentMethod').value;
-
-        // 1. Insert Order
-        const { data: orderData, error: orderError } = await db
-            .from('orders')
-            .insert([{
-                order_number: orderNumber,
-                customer_name: document.getElementById('customerName').value,
-                customer_phone: document.getElementById('customerPhone').value,
-                pickup_slot: pickupSlot,
-                payment_method: paymentMethod,
-                total: total,
-                note: document.getElementById('orderNote').value,
-                status: 'New'
-            }])
-            .select()
-            .single();
-
-        if (orderError) {
-            console.error('Order error:', orderError);
-            alert('Failed to place order: ' + orderError.message);
-            btn.innerText = 'Place Order';
-            btn.disabled = false;
-            return;
-        }
-
-        // 2. Insert Order Items
-        const orderItems = cart.map(item => ({
-            order_id: orderData.id,
-            product_id: item.id,
-            product_name: item.name,
-            quantity: item.quantity,
-            price_at_order: item.price
-        }));
-
-        const { error: itemsError } = await db
-            .from('order_items')
-            .insert(orderItems);
-
-        if (itemsError) {
-            console.error('Items error:', itemsError);
-            // Order was created, but items failed. (In production, you'd handle this rollback).
-        }
-
-        // 3. Show Success
-        document.getElementById('cart-modal').classList.remove('active');
-        document.getElementById('success-order-number').innerText = orderNumber;
-        
-        if (paymentMethod.includes('Advance UPI')) {
-            document.getElementById('upi-instruction').style.display = 'block';
-        } else {
-            document.getElementById('upi-instruction').style.display = 'none';
-        }
-        
-        document.getElementById('success-modal').classList.add('active');
-        
-        btn.innerText = 'Place Order';
-        btn.disabled = false;
-    });
-
-    // Initialize
-    loadProducts();
-</script>
-
+    </script>
 </body>
 </html>
