@@ -233,6 +233,8 @@
                 // Show weight buttons for By-Weight products
                 html += `
                     <div class="weight-options">
+                        <button class="weight-btn" onclick="addToCart('${p.id}', 0.25)">50g</button>
+                        <button class="weight-btn" onclick="addToCart('${p.id}', 0.25)">100g</button>
                         <button class="weight-btn" onclick="addToCart('${p.id}', 0.25)">250g</button>
                         <button class="weight-btn" onclick="addToCart('${p.id}', 0.5)">500g</button>
                         <button class="weight-btn" onclick="addToCart('${p.id}', 1)">1 kg</button>
