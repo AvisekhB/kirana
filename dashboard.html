@@ -7,73 +7,103 @@
     <link rel="icon" href="data:,">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f4f4f9; color: #333; }
-        .sidebar { width: 250px; background: #1b5e20; color: white; padding: 2rem 1rem; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; }
+        body { font-family: system-ui, sans-serif; margin: 0; background: #f4f4f9; color: #333; }
+        .hidden { display: none !important; }
+        .login-box { max-width: 400px; margin: 5rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .login-box label { font-weight: bold; font-size: 0.9rem; }
+        .login-box input { width: 100%; padding: 0.6rem; margin: 0.3rem 0 1rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        #dashboard-screen { display: flex; min-height: 100vh; }
+        .sidebar { width: 230px; background: #1b5e20; color: white; padding: 1.5rem 1rem; display: flex; flex-direction: column; }
         .sidebar h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #ffffff33; padding-bottom: 1rem; margin-bottom: 1rem; }
         .nav-btn { background: transparent; border: none; color: white; text-align: left; padding: 0.8rem; cursor: pointer; font-size: 1rem; border-radius: 4px; margin-bottom: 0.5rem; }
         .nav-btn:hover, .nav-btn.active { background: #2e7d32; }
-        .main { margin-left: 250px; padding: 2rem; }
-        .login-box { max-width: 400px; margin: 5rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .hidden { display: none !important; }
+        .nav-btn.logout { margin-top: auto; background: #c62828; }
+        .main { flex: 1; padding: 2rem; overflow-y: auto; }
+        .live { font-size: 0.8rem; color: #2e7d32; }
         table { width: 100%; border-collapse: collapse; background: white; margin-top: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; font-weight: bold; }
+        th, td { padding: 0.6rem; text-align: left; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { background: #f8f9fa; cursor: pointer; }
+        .cell { padding: 0.3rem; border: 1px solid #ddd; border-radius: 4px; width: 100%; box-sizing: border-box; }
         .badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
         .badge-new { background: #e3f2fd; color: #1565c0; }
         .badge-packed { background: #fff3e0; color: #e65100; }
         .badge-picked { background: #e8f5e9; color: #2e7d32; }
-        .btn { padding: 0.4rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; color: white; }
+        .badge-in { background: #e8f5e9; color: #2e7d32; }
+        .badge-out { background: #ffebee; color: #c62828; }
+        .btn { padding: 0.4rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; color: white; margin-right: 0.3rem; margin-top: 0.3rem; }
         .btn-primary { background: #1976d2; }
         .btn-success { background: #388e3c; }
+        .btn-danger { background: #d32f2f; }
         .btn-warning { background: #f57c00; }
+        .btn-dark { background: #455a64; }
         .order-card { background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 5px solid #1976d2; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .order-card.packed { border-left-color: #f57c00; }
-        .order-card.picked { border-left-color: #388e3c; opacity: 0.7; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
-        input[type="number"] { width: 80px; padding: 0.3rem; }
+        .order-card.pickedup { border-left-color: #388e3c; opacity: 0.75; }
+        .card { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .add-form { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .add-form input, .add-form select { padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+        h2.section { margin-top: 2rem; }
     </style>
 </head>
 <body>
 
+    <!-- Login Screen -->
     <div id="login-screen" class="login-box">
         <h2>Owner Login</h2>
         <form id="login-form">
-            <div style="margin-bottom: 1rem;">
-                <label>Email</label><br>
-                <input type="email" id="email" required style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <label>Password</label><br>
-                <input type="password" id="password" required style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
-            </div>
-            <button type="submit" class="btn btn-success" style="width: 100%; padding: 0.8rem;">Login</button>
+            <label>Email</label>
+            <input type="email" id="email" required>
+            <label>Password</label>
+            <input type="password" id="password" required>
+            <button type="submit" class="btn btn-success" style="width:100%; padding:0.8rem;">Login</button>
         </form>
     </div>
 
+    <!-- Dashboard Screen -->
     <div id="dashboard-screen" class="hidden">
         <div class="sidebar">
             <h2>Avisekh Grocery</h2>
             <button class="nav-btn active" onclick="showTab('orders', this)">Orders</button>
             <button class="nav-btn" onclick="showTab('inventory', this)">Inventory</button>
             <button class="nav-btn" onclick="showTab('customers', this)">Customers</button>
-            <button class="nav-btn" onclick="logout()" style="margin-top: auto; background: #c62828;">Logout</button>
+            <button class="nav-btn logout" onclick="logout()">Logout</button>
         </div>
         <div class="main">
             <div id="tab-orders">
-                <h1>Orders <span style="font-size:0.8rem; color:green;">● Live</span></h1>
-                <div id="orders-container" class="grid"></div>
+                <h1>Orders <span class="live">● Live</span></h1>
+                <div id="orders-container"></div>
             </div>
             <div id="tab-inventory" class="hidden">
                 <h1>Inventory Manager</h1>
+                <div class="card">
+                    <h3 style="margin-top:0;">Add New Product</h3>
+                    <form id="add-product-form" class="add-form">
+                        <input type="text" id="np-name" placeholder="Product name" required>
+                        <select id="np-type">
+                            <option value="Fixed">Fixed (per pack/piece)</option>
+                            <option value="By-Weight">By-Weight (price per kg)</option>
+                        </select>
+                        <input type="text" id="np-unit" placeholder="Unit (e.g. 500 g pack, kg)" required>
+                        <input type="number" id="np-price" placeholder="Price (INR)" step="0.01" min="0" required>
+                        <button type="submit" class="btn btn-success">Add Product</button>
+                    </form>
+                </div>
                 <table id="inventory-table">
                     <thead><tr><th>Name</th><th>Type</th><th>Unit</th><th>Price (₹)</th><th>Status</th><th>Actions</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
             <div id="tab-customers" class="hidden">
-                <h1>Customers (Sorted by Total Spent)</h1>
+                <h1>Customers</h1>
+                <p style="color:#666;">Click a column header to sort. Highest spenders = your regulars.</p>
                 <table id="customers-table">
-                    <thead><tr><th>Name</th><th>Phone</th><th>Total Orders</th><th>Total Spent</th><th>Last Order</th></tr></thead>
+                    <thead><tr>
+                        <th onclick="sortCustomers('name')">Name ⇅</th>
+                        <th onclick="sortCustomers('phone')">Phone ⇅</th>
+                        <th onclick="sortCustomers('total_orders')">Orders ⇅</th>
+                        <th onclick="sortCustomers('total_spent')">Total Spent ⇅</th>
+                        <th onclick="sortCustomers('last_order_date')">Last Order ⇅</th>
+                    </tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -86,129 +116,226 @@
         // ==========================================
         const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
-        const { createClient } = window.supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let productMap = {};
+        let ordersCache = [];
+        let customersData = [];
+        let sortKey = 'total_spent';
+        let sortDir = -1;
 
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { error } = await db.auth.signInWithPassword({ email, password });
-            if (error) alert(error.message);
-            else loadDashboard();
+            const { error } = await supabase.auth.signInWithPassword({
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            });
+            if (error) { alert('Login failed: ' + error.message); return; }
+            loadDashboard();
         });
 
         async function checkAuth() {
-            const { data: { session } } = await db.auth.getSession();
-            if (session) loadDashboard();
+            const { data } = await supabase.auth.getSession();
+            if (data.session) loadDashboard();
         }
 
-        async function loadDashboard() {
+        function loadDashboard() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('dashboard-screen').classList.remove('hidden');
-            fetchOrders();
-            fetchProducts();
-            fetchCustomers();
-
-            db.channel('public:orders')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => { fetchOrders(); })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => { fetchOrders(); })
+            fetchProducts().then(() => { fetchOrders(); fetchCustomers(); });
+            supabase.channel('db-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => fetchOrders())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => fetchOrders())
                 .subscribe();
         }
 
-        async function logout() {
-            await db.auth.signOut();
-            location.reload();
-        }
+        async function logout() { await supabase.auth.signOut(); location.reload(); }
 
         function showTab(tab, btn) {
-            document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
+            ['orders', 'inventory', 'customers'].forEach(t => document.getElementById('tab-' + t).classList.add('hidden'));
             document.getElementById('tab-' + tab).classList.remove('hidden');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
         }
 
+        // ---------- ORDERS ----------
         async function fetchOrders() {
-            const { data } = await db.from('orders').select('*, order_items(*, products(pricing_type))').order('created_at', { ascending: false });
-            if (!data) return;
+            const { data, error } = await supabase.from('orders').select('*, order_items(*)').order('created_at', { ascending: false });
+            if (error) { console.error(error); return; }
+            ordersCache = data || [];
+            const groups = { 'New': [], 'Packed': [], 'Picked Up': [] };
+            ordersCache.forEach(o => { (groups[o.status] || groups['New']).push(o); });
             const container = document.getElementById('orders-container');
             container.innerHTML = '';
-            data.forEach(o => {
-                const statusClass = o.status === 'New' ? '' : o.status.toLowerCase().replace(' ', '');
-                const cardClass = o.status === 'Packed' ? 'packed' : o.status === 'Picked Up' ? 'picked' : '';
-                const badgeClass = o.status === 'New' ? 'badge-new' : o.status === 'Packed' ? 'badge-packed' : 'badge-picked';
-                const nextStatus = o.status === 'New' ? 'Packed' : o.status === 'Packed' ? 'Picked Up' : null;
-
-                const itemsHtml = o.order_items.map(i => {
-                    const isWeight = i.products && i.products.pricing_type === 'By-Weight';
-                    const qtyStr = isWeight ? (i.quantity < 1 ? `${i.quantity * 1000} g` : `${i.quantity} kg`) : `${i.quantity} × ${i.products ? i.products.unit : 'unit'}`;
-                    return `<li>${i.product_name} — ${qtyStr} — ₹${(i.quantity * i.price_at_order).toFixed(2)}</li>`;
-                }).join('');
-
-                container.innerHTML += `
-                    <div class="order-card ${cardClass}">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                            <strong>${o.order_number}</strong>
-                            <span class="badge ${badgeClass}">${o.status}</span>
-                        </div>
-                        <p style="margin:0.25rem 0;"><strong>${o.customer_name}</strong> (${o.customer_phone})</p>
-                        <p style="margin:0.25rem 0; color:#666;">Pickup: ${o.pickup_slot} | Pay: ${o.payment_method}</p>
-                        ${o.note ? `<p style="margin:0.25rem 0; color:#666;">Note: ${o.note}</p>` : ''}
-                        <ul style="margin:0.5rem 0; padding-left:1.5rem;">${itemsHtml}</ul>
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:0.5rem; margin-top:0.5rem;">
-                            <strong>Total: ₹${o.total}</strong>
-                            ${nextStatus ? `<button class="btn btn-primary" onclick="updateStatus('${o.id}', '${nextStatus}')">Mark ${nextStatus}</button>` : ''}
-                        </div>
-                    </div>`;
+            ['New', 'Packed', 'Picked Up'].forEach(status => {
+                const sec = document.createElement('div');
+                sec.innerHTML = `<h2 class="section">${status} (${groups[status].length})</h2>`;
+                if (groups[status].length === 0) sec.innerHTML += '<p style="color:#888;">No orders here.</p>';
+                groups[status].forEach(o => sec.appendChild(orderCard(o)));
+                container.appendChild(sec);
             });
+        }
+
+        function itemText(i) {
+            const p = productMap[i.product_id];
+            if (p && p.pricing_type === 'By-Weight') {
+                const q = parseFloat(i.quantity);
+                return `${i.product_name} — ${q < 1 ? (q * 1000) + ' g' : q + ' kg'} × ₹${i.price_at_order}/kg`;
+            }
+            return `${i.product_name} — ${i.quantity} × ${p ? p.unit : 'pc'} @ ₹${i.price_at_order}`;
+        }
+
+        function orderCard(o) {
+            const card = document.createElement('div');
+            card.className = 'order-card ' + o.status.toLowerCase().replace(' ', '');
+            const badge = o.status === 'New' ? 'badge-new' : o.status === 'Packed' ? 'badge-packed' : 'badge-picked';
+            let actions = '';
+            if (o.status === 'New') actions = `<button class="btn btn-primary" onclick="updateStatus('${o.id}','Packed')">Mark Packed</button>`;
+            if (o.status === 'Packed') actions = `<button class="btn btn-dark" onclick="printBill('${o.id}')">Print Bill</button><button class="btn btn-success" onclick="updateStatus('${o.id}','Picked Up')">Mark Picked Up</button>`;
+            if (o.status === 'Picked Up') actions = `<button class="btn btn-dark" onclick="printBill('${o.id}')">Print Bill</button>`;
+            const itemsHtml = (o.order_items || []).map(i => `<li>${itemText(i)} = ₹${(i.quantity * i.price_at_order).toFixed(2)}</li>`).join('');
+            card.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
+                    <strong>${o.order_number}</strong><span class="badge ${badge}">${o.status}</span>
+                </div>
+                <p style="margin:0.25rem 0;"><strong>${o.customer_name}</strong> — ${o.customer_phone}</p>
+                <p style="margin:0.25rem 0; color:#666;">Pickup: ${o.pickup_slot} | Payment: ${o.payment_method}</p>
+                ${o.note ? `<p style="margin:0.25rem 0; color:#666;">Note: ${o.note}</p>` : ''}
+                <ul style="margin:0.5rem 0; padding-left:1.5rem;">${itemsHtml}</ul>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:0.5rem;">
+                    <strong>Total: ₹${o.total}</strong>
+                    <div>${actions}</div>
+                </div>`;
+            return card;
         }
 
         async function updateStatus(id, status) {
-            await db.from('orders').update({ status }).eq('id', id);
+            const { error } = await supabase.from('orders').update({ status: status }).eq('id', id);
+            if (error) alert(error.message); else fetchOrders();
         }
 
+        // ---------- PRINT BILL ----------
+        function printBill(orderId) {
+            const o = ordersCache.find(x => x.id === orderId);
+            if (!o) { alert('Order not found. Refresh and try again.'); return; }
+            const rows = (o.order_items || []).map(i => {
+                const p = productMap[i.product_id];
+                const q = parseFloat(i.quantity);
+                const qtyLabel = (p && p.pricing_type === 'By-Weight') ? (q < 1 ? (q * 1000) + ' g' : q + ' kg') : `${i.quantity} ${p ? p.unit : 'pc'}`;
+                return `<tr><td>${i.product_name}</td><td>${qtyLabel}</td><td>${i.price_at_order}</td><td style="text-align:right;">${(i.quantity * i.price_at_order).toFixed(2)}</td></tr>`;
+            }).join('');
+            const html = `<!DOCTYPE html><html><head><title>Bill ${o.order_number}</title>
+            <style>
+                body{font-family:Arial,sans-serif;color:#000;margin:24px;font-size:14px;}
+                .head{text-align:center;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:12px;}
+                .head h1{margin:0;font-size:20px;}
+                table{width:100%;border-collapse:collapse;margin-top:8px;}
+                th,td{border:1px solid #000;padding:6px 8px;font-size:13px;}
+                th{background:#eee;}
+                .meta td{border:none;padding:2px 0;}
+                .total{font-size:16px;font-weight:bold;text-align:right;margin-top:10px;}
+                .foot{margin-top:24px;text-align:center;font-size:12px;}
+            </style></head><body>
+            <div class="head"><h1>Avisekh Grocery</h1><div>Burnpur, West Bengal<br>Phone: +91 9999999999</div></div>
+            <table class="meta">
+                <tr><td><strong>Bill No:</strong> ${o.order_number}</td><td><strong>Date:</strong> ${new Date(o.created_at).toLocaleString('en-IN')}</td></tr>
+                <tr><td><strong>Customer:</strong> ${o.customer_name} (${o.customer_phone})</td><td><strong>Pickup:</strong> ${o.pickup_slot}</td></tr>
+                <tr><td><strong>Payment:</strong> ${o.payment_method}</td><td><strong>Status:</strong> ${o.status}</td></tr>
+                ${o.note ? `<tr><td colspan="2"><strong>Note:</strong> ${o.note}</td></tr>` : ''}
+            </table>
+            <table><thead><tr><th>Item</th><th>Qty</th><th>Rate (Rs.)</th><th style="text-align:right;">Amount (Rs.)</th></tr></thead><tbody>${rows}</tbody></table>
+            <div class="total">Grand Total: Rs. ${Number(o.total).toFixed(2)}</div>
+            <div class="foot">Thank you for shopping with us!<br>Come to the front counter and give your name for pickup.</div>
+            <script>window.onload = function(){ window.print(); };<\/script>
+            </body></html>`;
+            const w = window.open('', '_blank');
+            if (!w) { alert('Please allow pop-ups in your browser to print bills.'); return; }
+            w.document.open();
+            w.document.write(html);
+            w.document.close();
+        }
+
+        // ---------- INVENTORY ----------
         async function fetchProducts() {
-            const { data } = await db.from('products').select('*').order('name');
-            if (!data) return;
-            const tbody = document.querySelector('#inventory-table tbody');
-            tbody.innerHTML = '';
-            data.forEach(p => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${p.name}</td>
-                        <td>${p.pricing_type}</td>
-                        <td>${p.unit}</td>
-                        <td><input type="number" value="${p.price}" onchange="updatePrice('${p.id}', this.value)"> ${p.pricing_type === 'By-Weight' ? '/kg' : ''}</td>
-                        <td><span class="badge ${p.active ? 'badge-picked' : 'badge-packed'}">${p.active ? 'In Stock' : 'Out of Stock'}</span></td>
-                        <td><button class="btn btn-warning" onclick="toggleActive('${p.id}', ${p.active})">${p.active ? 'Mark Out' : 'Mark In'}</button></td>
-                    </tr>`;
-            });
+            const { data, error } = await supabase.from('products').select('*').order('name');
+            if (error) { console.error(error); return; }
+            productMap = {};
+            (data || []).forEach(p => productMap[p.id] = p);
+            document.querySelector('#inventory-table tbody').innerHTML = (data || []).map(p => `
+                <tr>
+                    <td><input class="cell" value="${p.name}" onchange="updateProduct('${p.id}','name',this.value)"></td>
+                    <td>${p.pricing_type}</td>
+                    <td><input class="cell" value="${p.unit}" onchange="updateProduct('${p.id}','unit',this.value)"></td>
+                    <td><input class="cell" type="number" step="0.01" value="${p.price}" onchange="updateProduct('${p.id}','price',this.value)">${p.pricing_type === 'By-Weight' ? ' /kg' : ''}</td>
+                    <td><span class="badge ${p.active ? 'badge-in' : 'badge-out'}">${p.active ? 'In Stock' : 'Out of Stock'}</span></td>
+                    <td>
+                        <button class="btn btn-warning" onclick="toggleActive('${p.id}', ${p.active})">${p.active ? 'Mark Out' : 'Mark In'}</button>
+                        <button class="btn btn-danger" onclick="deleteProduct('${p.id}')">Delete</button>
+                    </td>
+                </tr>`).join('');
         }
 
-        async function updatePrice(id, price) {
-            await db.from('products').update({ price: parseFloat(price) }).eq('id', id);
+        async function updateProduct(id, field, value) {
+            const update = {};
+            update[field] = (field === 'price') ? parseFloat(value) : value;
+            const { error } = await supabase.from('products').update(update).eq('id', id);
+            if (error) alert(error.message);
         }
 
         async function toggleActive(id, current) {
-            await db.from('products').update({ active: !current }).eq('id', id);
-            fetchProducts();
+            const { error } = await supabase.from('products').update({ active: !current }).eq('id', id);
+            if (error) alert(error.message); else fetchProducts();
         }
 
-        async function fetchCustomers() {
-            const { data } = await db.from('customers').select('*').order('total_spent', { ascending: false });
-            if (!data) return;
-            const tbody = document.querySelector('#customers-table tbody');
-            tbody.innerHTML = '';
-            data.forEach(c => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${c.name}</td>
-                        <td>${c.phone}</td>
-                        <td>${c.total_orders}</td>
-                        <td>₹${c.total_spent}</td>
-                        <td>${new Date(c.last_order_date).toLocaleDateString()}</td>
-                    </tr>`;
+        async function deleteProduct(id) {
+            if (!confirm('Delete this product? Old orders keep their history.')) return;
+            const { error } = await supabase.from('products').delete().eq('id', id);
+            if (error) alert(error.message); else fetchProducts();
+        }
+
+        document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const { error } = await supabase.from('products').insert({
+                name: document.getElementById('np-name').value,
+                category: 'Groceries',
+                unit: document.getElementById('np-unit').value,
+                price: parseFloat(document.getElementById('np-price').value),
+                pricing_type: document.getElementById('np-type').value,
+                active: true
             });
+            if (error) { alert(error.message); return; }
+            e.target.reset();
+            fetchProducts();
+        });
+
+        // ---------- CUSTOMERS ----------
+        async function fetchCustomers() {
+            const { data, error } = await supabase.from('customers').select('*');
+            if (error) { console.error('Customers view error: ' + error.message); return; }
+            customersData = data || [];
+            renderCustomers();
+        }
+
+        function renderCustomers() {
+            const sorted = [...customersData].sort((a, b) => {
+                let va = a[sortKey], vb = b[sortKey];
+                if (sortKey === 'last_order_date') { va = new Date(va || 0); vb = new Date(vb || 0); }
+                if (typeof va === 'string') { va = (va || '').toLowerCase(); vb = (vb || '').toLowerCase(); }
+                return (va < vb ? -1 : va > vb ? 1 : 0) * sortDir;
+            });
+            document.querySelector('#customers-table tbody').innerHTML = sorted.map(c => `
+                <tr>
+                    <td>${c.name}</td>
+                    <td>${c.phone}</td>
+                    <td>${c.total_orders}</td>
+                    <td>₹${c.total_spent}</td>
+                    <td>${new Date(c.last_order_date).toLocaleDateString('en-IN')}</td>
+                </tr>`).join('') || '<tr><td colspan="5">No customers yet. Orders you receive will build this list automatically.</td></tr>';
+        }
+
+        function sortCustomers(key) {
+            if (sortKey === key) sortDir = -sortDir; else { sortKey = key; sortDir = -1; }
+            renderCustomers();
         }
 
         checkAuth();
