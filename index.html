@@ -229,7 +229,7 @@
             const orderNumber = 'AG-' + new Date().getTime().toString().slice(-6);
 
             const orderId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'ord-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
-            const { error: orderError } = await supabase.from('orders').insert({
+            const { error: orderError } = await supabaseClient.from('orders').insert({
                 id: orderId,
                 order_number: orderNumber, customer_name: name, customer_phone: phone,
                 pickup_slot: `${date} ${time}`, payment_method: payment, total: total, note: note
