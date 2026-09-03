@@ -1,257 +1,331 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avisekh Grocery - Order Online</title>
-    <link rel="icon" href="data:,">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f8f9fa; color: #333; }
-        header { background: #2e7d32; color: white; padding: 1rem; text-align: center; }
-        .container { max-width: 600px; margin: 0 auto; padding: 1rem; padding-bottom: 100px; }
-        .shop-info { background: #e8f5e9; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: 0.9rem; }
-        .product-card { background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; gap: 1rem;}
-        .product-info h3 { margin: 0 0 0.25rem 0; font-size: 1rem; }
-        .product-info p { margin: 0; color: #666; font-size: 0.9rem; }
-        .price { color: #2e7d32; font-weight: bold; }
-        .controls { display: flex; align-items: center; gap: 0.5rem; }
-        .btn { background: #2e7d32; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-        .btn-outline { background: white; color: #2e7d32; border: 1px solid #2e7d32; }
-        .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 1rem; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; z-index: 100; }
-        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
-        .modal.active { display: flex; }
-        .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
-        .form-group { margin-bottom: 1rem; }
-        .form-group label { display: block; margin-bottom: 0.25rem; font-weight: bold; font-size: 0.9rem; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .cart-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee; font-size: 0.9rem;}
-        .success-screen { text-align: center; padding: 2rem; }
-        .success-screen img { margin: 1rem auto; border: 1px solid #eee; }
-        input[type="number"], select { padding: 0.4rem; border: 1px solid #ccc; border-radius: 4px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; }
+        header { background: #2e7d32; color: white; padding: 20px; text-align: center; }
+        header h1 { margin-bottom: 5px; }
+        .info-bar { background: #e8f5e9; padding: 15px; text-align: center; font-size: 0.9em; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
+        .product-card { background: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        .product-card h3 { margin: 10px 0; font-size: 1.1em; }
+        .product-card p { color: #666; font-size: 0.9em; margin: 5px 0; }
+        .product-card .price { font-weight: bold; color: #2e7d32; font-size: 1.2em; margin: 10px 0; }
+        .add-btn { background: #2e7d32; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; width: 100%; }
+        .add-btn:hover { background: #1b5e20; }
+        .floating-cart { position: fixed; bottom: 20px; right: 20px; background: #2e7d32; color: white; padding: 15px 25px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 100; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal h2 { margin-bottom: 20px; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }
+        .close-modal { float: right; font-size: 1.5em; cursor: pointer; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; cursor: pointer; margin-top: 10px; }
+        .btn-secondary { background: white; color: #2e7d32; border: 2px solid #2e7d32; padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; cursor: pointer; margin-top: 10px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .cart-item button { background: #d32f2f; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .total-display { font-size: 1.5em; font-weight: bold; text-align: right; margin: 15px 0; color: #2e7d32; }
+        .success-content { text-align: center; }
+        .order-number { font-size: 2em; font-weight: bold; color: #2e7d32; background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .upi-box { background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Avisekh Grocery</h1>
-        <p>Order Online, Pick Up In Store</p>
-    </header>
 
-    <div class="container" id="storefront">
-        <div class="shop-info">
-            <strong>Address:</strong> Burnpur, West Bengal<br>
-            <strong>Contact:</strong> +91 9999999999<br>
-            <strong>Hours:</strong> 9:00 AM - 8:00 PM (Closed Thursdays)<br>
-            <strong>Pickup:</strong> Come to the front counter and give your name.
-        </div>
-        <div id="products-list">Loading products...</div>
+<header>
+    <h1>Avisekh Grocery</h1>
+    <p>Order Online, Pick Up In Store</p>
+</header>
+
+<div class="info-bar">
+    Address: Burnpur, West Bengal | Contact: +91 9999999999 | Hours: 9:00 AM - 8:00 PM (Closed Thursdays)<br>
+    Pickup: Come to the front counter and give your name.
+</div>
+
+<div class="container">
+    <h2 id="loading-text" style="text-align:center;">Loading products...</h2>
+    <div class="products-grid" id="products-grid"></div>
+</div>
+
+<div class="floating-cart" id="view-cart-btn">
+    Total: ₹<span id="cart-total-float">0</span> | <span id="cart-count-float">0</span> items<br>View Cart & Checkout
+</div>
+
+<!-- Cart Modal -->
+<div class="modal-overlay" id="cart-modal">
+    <div class="modal">
+        <span class="close-modal" id="close-cart">&times;</span>
+        <h2>Your Cart</h2>
+        <div id="cart-items-container"><p>Your cart is empty.</p></div>
+        <div class="total-display">Total: ₹<span id="cart-total-modal">0</span></div>
+        
+        <form id="checkout-form">
+            <div class="form-group">
+                <label>Your Name</label>
+                <input type="text" id="customerName" required>
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="customerPhone" pattern="[0-9]{10}" required>
+            </div>
+            <div class="form-group">
+                <label>Pickup Date</label>
+                <input type="date" id="pickupDate" required>
+            </div>
+            <div class="form-group">
+                <label>Pickup Time</label>
+                <select id="pickupTime" required>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                    <option value="11:00">11:00</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                    <option value="18:30">18:30</option>
+                    <option value="19:00">19:00</option>
+                    <option value="19:30">19:30</option>
+                    <option value="20:00">20:00</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Payment Method</label>
+                <select id="paymentMethod" required>
+                    <option value="Cash at pickup">Cash at pickup</option>
+                    <option value="UPI at pickup">UPI at pickup</option>
+                    <option value="Advance UPI (Applez@upi)">Advance UPI (Applez@upi)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Note (Optional)</label>
+                <textarea id="orderNote" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn-primary" id="place-order-btn">Place Order</button>
+            <button type="button" class="btn-secondary" id="keep-shopping-btn">Keep Shopping</button>
+        </form>
     </div>
+</div>
 
-    <div class="cart-bar" id="cart-bar" style="display: none;">
-        <div>
-            <div style="font-weight: bold;">Total: ₹<span id="cart-total">0</span></div>
-            <div style="font-size: 0.8rem; color: #666;"><span id="cart-count">0</span> items</div>
+<!-- Success Modal -->
+<div class="modal-overlay" id="success-modal">
+    <div class="modal success-content">
+        <h2>Order Placed!</h2>
+        <p>Your order number is:</p>
+        <div class="order-number" id="success-order-number"></div>
+        <p>Show this QR code or order number at the counter.</p>
+        <div class="upi-box" id="upi-instruction" style="display:none;">
+            Please pay to <b>Applez@upi</b> and show receipt at counter.
         </div>
-        <button class="btn" onclick="openCheckout()">View Cart & Checkout</button>
+        <button class="btn-primary" id="place-another-btn">Place Another Order</button>
     </div>
+</div>
 
-    <div class="modal" id="checkout-modal">
-        <div class="modal-content">
-            <h2>Your Cart</h2>
-            <div id="cart-items"></div>
-            <h3 style="text-align: right; margin-top: 1rem;">Total: ₹<span id="modal-total">0</span></h3>
-            <hr>
-            <form id="checkout-form">
-                <div class="form-group"><label>Your Name</label><input type="text" id="cust-name" required></div>
-                <div class="form-group"><label>Phone Number</label><input type="tel" id="cust-phone" pattern="[0-9]{10}" placeholder="10 digit number" required></div>
-                <div class="form-group"><label>Pickup Date</label><input type="date" id="pickup-date" required></div>
-                <div class="form-group"><label>Pickup Time</label><select id="pickup-time" required></select></div>
-                <div class="form-group"><label>Payment Method</label>
-                    <select id="payment-method" required>
-                        <option value="Cash at pickup">Cash at pickup</option>
-                        <option value="UPI at pickup">UPI at pickup</option>
-                        <option value="Advance UPI (Applez@upi)">Advance UPI (Applez@upi)</option>
-                    </select>
-                </div>
-                <div class="form-group"><label>Note (Optional)</label><textarea id="cust-note" rows="2"></textarea></div>
-                <button type="submit" class="btn" style="width: 100%;">Place Order</button>
-                <button type="button" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem;" onclick="closeCheckout()">Keep Shopping</button>
-            </form>
-        </div>
-    </div>
-
-    <div class="modal" id="success-modal">
-        <div class="modal-content success-screen">
-            <h2 style="color: #2e7d32;">Order Placed!</h2>
-            <p>Your order number is:</p>
-            <h1 id="success-order-number"></h1>
-            <img id="qr-code" src="" alt="Order QR Code" width="150" height="150">
-            <p>Show this QR code or order number at the counter.</p>
-            <p id="upi-note" style="color: #d32f2f; font-weight: bold; display: none;">Please pay to Applez@upi and show receipt at counter.</p>
-            <button class="btn" onclick="location.reload()">Place Another Order</button>
-        </div>
-    </div>
-
-    <script>
-        // ==========================================
-        // PASTE YOUR SUPABASE CREDENTIALS HERE (EXACTLY ONCE)
-        // ==========================================
+<script>
+// ============================================
+// SUPABASE INITIALIZATION - THIS IS THE FIX
+// ============================================
         const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
-        const { createClient } = window.supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let products = [];
-        let cart = [];
 
-        async function init() {
-            const { data, error } = await db.from('products').select('*').eq('active', true).order('name');
-            if (error) { document.getElementById('products-list').innerHTML = 'Error loading products: ' + error.message; return; }
-            products = data;
-            renderProducts();
-            setupDateAndTime();
-        }
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        function renderProducts() {
-            const container = document.getElementById('products-list');
-            container.innerHTML = '';
-            products.forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'product-card';
-                if (p.pricing_type === 'Fixed') {
-                    div.innerHTML = `
-                        <div class="product-info">
-                            <h3>${p.name}</h3>
-                            <p>${p.unit}</p>
-                            <div class="price">₹${p.price}</div>
-                        </div>
-                        <div class="controls">
-                            <input type="number" class="qty-input" data-id="${p.id}" value="1" min="1" max="99" style="width: 50px; text-align: center;">
-                            <button class="btn" onclick="addToCart('${p.id}')">Add</button>
-                        </div>`;
-                } else {
-                    div.innerHTML = `
-                        <div class="product-info">
-                            <h3>${p.name}</h3>
-                            <p>Loose / By Weight</p>
-                            <div class="price">₹${p.price} / kg</div>
-                        </div>
-                        <div class="controls">
-                            <select class="weight-select" data-id="${p.id}">
-                                <option value="0.25">250g</option>
-                                <option value="0.5">500g</option>
-                                <option value="1" selected>1 kg</option>
-                                <option value="2">2 kg</option>
-                                <option value="5">5 kg</option>
-                            </select>
-                            <button class="btn" onclick="addToCart('${p.id}')">Add</button>
-                        </div>`;
-                }
-                container.appendChild(div);
-            });
-        }
+// App State
+let cart = [];
+let products = [];
 
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            let quantity = 1;
-            let displayUnit = product.unit;
+// Load Products
+async function loadProducts() {
+    const { data, error } = await db.from('products').select('*').eq('active', true).order('name');
+    
+    if (error) {
+        console.error('Error:', error);
+        document.getElementById('loading-text').innerText = 'Failed to load products.';
+        return;
+    }
+    
+    products = data;
+    document.getElementById('loading-text').style.display = 'none';
+    renderProducts();
+}
 
-            if (product.pricing_type === 'By-Weight') {
-                const select = document.querySelector(`.weight-select[data-id="${productId}"]`);
-                quantity = parseFloat(select.value);
-                displayUnit = quantity < 1 ? `${quantity * 1000}g` : `${quantity} kg`;
-            } else {
-                const input = document.querySelector(`.qty-input[data-id="${productId}"]`);
-                quantity = parseInt(input.value);
-                if (quantity < 1) quantity = 1;
-            }
+function renderProducts() {
+    const grid = document.getElementById('products-grid');
+    grid.innerHTML = '';
+    products.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `
+            <h3>${p.name}</h3>
+            <p>${p.unit}</p>
+            <div class="price">₹${p.price}${p.pricing_type === 'By-Weight' ? ' / kg' : ''}</div>
+            <button class="add-btn" onclick="addToCart('${p.id}')">Add</button>
+        `;
+        grid.appendChild(card);
+    });
+}
 
-            const existing = cart.find(item => item.product_id === productId);
-            if (existing) {
-                existing.quantity += quantity;
-                if (product.pricing_type === 'By-Weight') {
-                    existing.displayUnit = existing.quantity < 1 ? `${existing.quantity * 1000}g` : `${existing.quantity} kg`;
-                }
-            } else {
-                cart.push({ product_id: product.id, name: product.name, pricing_type: product.pricing_type, unit: product.unit, quantity, price: product.price, displayUnit });
-            }
-            updateCartUI();
-        }
+// Cart Functions
+window.addToCart = function(productId) {
+    const product = products.find(p => p.id === productId);
+    const existing = cart.find(item => item.id === productId);
+    
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        cart.push({ ...product, quantity: 1 });
+    }
+    updateCartUI();
+};
 
-        function updateCartUI() {
-            const total = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-            document.getElementById('cart-count').textContent = cart.length;
-            document.getElementById('cart-total').textContent = total.toFixed(2);
-            document.getElementById('cart-bar').style.display = cart.length > 0 ? 'flex' : 'none';
-        }
+window.removeFromCart = function(productId) {
+    cart = cart.filter(item => item.id !== productId);
+    updateCartUI();
+    renderCartItems();
+};
 
-        function openCheckout() {
-            document.getElementById('cart-items').innerHTML = cart.map(item => `
-                <div class="cart-item">
-                    <span>${item.name} (${item.pricing_type === 'By-Weight' ? item.displayUnit : item.quantity + ' ' + item.unit})</span>
-                    <span>₹${(item.quantity * item.price).toFixed(2)}</span>
-                </div>
-            `).join('');
-            document.getElementById('modal-total').textContent = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0).toFixed(2);
-            document.getElementById('checkout-modal').classList.add('active');
-        }
+function updateCartUI() {
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+    
+    document.getElementById('cart-total-float').innerText = total.toFixed(2);
+    document.getElementById('cart-count-float').innerText = count;
+    document.getElementById('cart-total-modal').innerText = total.toFixed(2);
+}
 
-        function closeCheckout() { document.getElementById('checkout-modal').classList.remove('active'); }
+function renderCartItems() {
+    const container = document.getElementById('cart-items-container');
+    container.innerHTML = '';
+    
+    if (cart.length === 0) {
+        container.innerHTML = '<p>Your cart is empty.</p>';
+        return;
+    }
+    
+    cart.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+            <div>
+                <b>${item.name}</b><br>
+                <small>${item.quantity} x ₹${item.price} = ₹${(item.quantity * item.price).toFixed(2)}</small>
+            </div>
+            <button onclick="removeFromCart('${item.id}')">Remove</button>
+        `;
+        container.appendChild(div);
+    });
+}
 
-        function setupDateAndTime() {
-            const dateInput = document.getElementById('pickup-date');
-            const today = new Date().toISOString().split('T')[0];
-            dateInput.min = today;
-            dateInput.value = today;
+// Modal Controls
+document.getElementById('view-cart-btn').addEventListener('click', () => {
+    renderCartItems();
+    document.getElementById('cart-modal').classList.add('active');
+});
 
-            const timeSelect = document.getElementById('pickup-time');
-            for (let h = 9; h <= 19; h++) {
-                for (let m = 0; m < 60; m += 30) {
-                    const hour = h.toString().padStart(2, '0');
-                    const min = m.toString().padStart(2, '0');
-                    const opt = document.createElement('option');
-                    opt.value = `${hour}:${min}`;
-                    opt.textContent = `${hour}:${min}`;
-                    timeSelect.appendChild(opt);
-                }
-            }
-        }
+document.getElementById('close-cart').addEventListener('click', () => {
+    document.getElementById('cart-modal').classList.remove('active');
+});
 
-        document.getElementById('checkout-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('cust-name').value;
-            const phone = document.getElementById('cust-phone').value;
-            const date = document.getElementById('pickup-date').value;
-            const time = document.getElementById('pickup-time').value;
-            const payment = document.getElementById('payment-method').value;
-            const note = document.getElementById('cust-note').value;
-            const total = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
-            const orderNumber = 'AG-' + new Date().getTime().toString().slice(-6);
+document.getElementById('keep-shopping-btn').addEventListener('click', () => {
+    document.getElementById('cart-modal').classList.remove('active');
+});
 
-            const orderId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'ord-' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
-            const { error: orderError } = await supabase.from('orders').insert({
-                id: orderId,
-                order_number: orderNumber, customer_name: name, customer_phone: phone,
-                pickup_slot: `${date} ${time}`, payment_method: payment, total: total, note: note
-            });
+document.getElementById('place-another-btn').addEventListener('click', () => {
+    cart = [];
+    updateCartUI();
+    document.getElementById('success-modal').classList.remove('active');
+    document.getElementById('checkout-form').reset();
+});
 
-            if (orderError) { alert('Error placing order: ' + orderError.message); return; }
+// Place Order
+document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (cart.length === 0) {
+        alert('Your cart is empty!');
+        return;
+    }
+    
+    const btn = document.getElementById('place-order-btn');
+    btn.innerText = 'Processing...';
+    btn.disabled = true;
+    
+    const orderNumber = 'ORD-' + Date.now().toString().slice(-6);
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const pickupSlot = `${document.getElementById('pickupDate').value} ${document.getElementById('pickupTime').value}`;
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    
+    // Insert Order
+    const { data: orderData, error: orderError } = await db.from('orders').insert([{
+        order_number: orderNumber,
+        customer_name: document.getElementById('customerName').value,
+        customer_phone: document.getElementById('customerPhone').value,
+        pickup_slot: pickupSlot,
+        payment_method: paymentMethod,
+        total: total,
+        note: document.getElementById('orderNote').value,
+        status: 'New'
+    }]).select().single();
+    
+    if (orderError) {
+        console.error('Order error:', orderError);
+        alert('Failed to place order: ' + orderError.message);
+        btn.innerText = 'Place Order';
+        btn.disabled = false;
+        return;
+    }
+    
+    // Insert Order Items
+    const orderItems = cart.map(item => ({
+        order_id: orderData.id,
+        product_id: item.id,
+        product_name: item.name,
+        quantity: item.quantity,
+        price_at_order: item.price
+    }));
+    
+    await db.from('order_items').insert(orderItems);
+    
+    // Show Success
+    document.getElementById('cart-modal').classList.remove('active');
+    document.getElementById('success-order-number').innerText = orderNumber;
+    
+    if (paymentMethod.includes('Advance UPI')) {
+        document.getElementById('upi-instruction').style.display = 'block';
+    } else {
+        document.getElementById('upi-instruction').style.display = 'none';
+    }
+    
+    document.getElementById('success-modal').classList.add('active');
+    btn.innerText = 'Place Order';
+    btn.disabled = false;
+});
 
-            const items = cart.map(item => ({
-                order_id: orderId, product_id: item.product_id, product_name: item.name,
-                quantity: item.quantity, price_at_order: item.price
-            }));
-            const { error: itemsError } = await db.from('order_items').insert(items);
-            if (itemsError) { alert('Error saving items: ' + itemsError.message); return; }
+// Initialize
+loadProducts();
+</script>
 
-            cart = []; updateCartUI(); closeCheckout();
-            document.getElementById('success-order-number').textContent = orderNumber;
-            document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${orderNumber}`;
-            if (payment.includes('Advance')) document.getElementById('upi-note').style.display = 'block';
-            document.getElementById('success-modal').classList.add('active');
-        });
-
-        init();
-    </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
