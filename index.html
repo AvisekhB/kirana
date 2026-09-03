@@ -5,29 +5,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avisekh Grocery - Order Online</title>
-    <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
         header { background: #2e7d32; color: white; padding: 20px; text-align: center; }
-        .info-bar { background: #e8f5e9; padding: 10px; text-align: center; font-size: 0.9em; border-bottom: 1px solid #ccc; }
-        .container { max-width: 1000px; margin: 20px auto; padding: 0 15px; }
+        header h1 { margin: 0; }
+        .info-bar { background: #e8f5e9; padding: 10px; text-align: center; font-size: 0.9em; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
         
         /* Product Grid */
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
         .product-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
         .product-card h3 { margin: 10px 0; font-size: 1.1em; }
-        .product-card .price { font-weight: bold; color: #2e7d32; font-size: 1.2em; }
-        .add-btn { background: #2e7d32; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .product-card .unit { color: #666; font-size: 0.9em; }
+        .product-card .price { font-weight: bold; color: #2e7d32; font-size: 1.2em; margin: 10px 0; }
+        
+        /* Weight Buttons */
+        .weight-options { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 10px; }
+        .weight-btn { background: #fff; border: 2px solid #2e7d32; color: #2e7d32; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.85em; }
+        .weight-btn:hover { background: #2e7d32; color: white; }
+        
+        /* Fixed Product Add Button */
+        .add-btn { background: #2e7d32; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; font-size: 1em; }
+        .add-btn:hover { background: #1b5e20; }
         
         /* Floating Cart */
-        .floating-cart { position: fixed; bottom: 20px; right: 20px; background: #2e7d32; color: white; padding: 15px 25px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 100; }
+        .floating-cart { position: fixed; bottom: 20px; right: 20px; background: #2e7d32; color: white; padding: 15px 25px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 100; text-align: center; }
         
         /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
         .modal { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
         .modal h2 { margin-top: 0; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }
+        .close-modal { float: right; font-size: 1.5em; cursor: pointer; }
         
         /* Form */
         .form-group { margin-bottom: 15px; }
@@ -36,8 +46,9 @@
         .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; cursor: pointer; }
         .btn-secondary { background: white; color: #2e7d32; border: 2px solid #2e7d32; padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; cursor: pointer; margin-top: 10px; }
         
-        .cart-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .total-display { font-size: 1.5em; font-weight: bold; text-align: right; margin: 15px 0; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .cart-item button { background: #d32f2f; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .total-display { font-size: 1.5em; font-weight: bold; text-align: right; margin: 15px 0; color: #2e7d32; }
     </style>
 </head>
 <body>
@@ -47,11 +58,12 @@
     <p>Order Online, Pick Up In Store</p>
 </header>
 <div class="info-bar">
-    Address: Burnpur, West Bengal | Contact: +91 9999999999 | Hours: 9:00 AM - 8:00 PM
+    Address: Burnpur, West Bengal | Contact: +91 9999999999 | Hours: 9:00 AM - 8:00 PM (Closed Thursdays)<br>
+    Pickup: Come to the front counter and give your name.
 </div>
 
 <div class="container">
-    <h2 id="loading-msg">Loading products...</h2>
+    <h2 id="loading-msg" style="text-align:center;">Loading products...</h2>
     <div class="products-grid" id="products-grid"></div>
 </div>
 
@@ -62,6 +74,7 @@
 <!-- Cart Modal -->
 <div class="modal-overlay" id="cart-modal">
     <div class="modal">
+        <span class="close-modal" id="close-cart">&times;</span>
         <h2>Your Cart</h2>
         <div id="cart-items-list"></div>
         <div class="total-display">Total: ₹<span id="modal-total">0</span></div>
@@ -86,15 +99,24 @@
                     <option value="10:00">10:00</option>
                     <option value="11:00">11:00</option>
                     <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
                     <option value="18:30">18:30</option>
+                    <option value="19:00">19:00</option>
+                    <option value="19:30">19:30</option>
+                    <option value="20:00">20:00</option>
                 </select>
             </div>
             <div class="form-group">
                 <label>Payment Method</label>
                 <select id="pay-method" required>
-                    <option value="Cash">Cash at pickup</option>
-                    <option value="UPI">UPI at pickup</option>
-                    <option value="Advance UPI">Advance UPI (Applez@upi)</option>
+                    <option value="Cash at pickup">Cash at pickup</option>
+                    <option value="UPI at pickup">UPI at pickup</option>
+                    <option value="Advance UPI (Applez@upi)">Advance UPI (Applez@upi)</option>
                 </select>
             </div>
             <div class="form-group">
@@ -102,7 +124,7 @@
                 <textarea id="order-note" rows="2"></textarea>
             </div>
             <button type="submit" class="btn-primary">Place Order</button>
-            <button type="button" class="btn-secondary" id="close-cart-btn">Keep Shopping</button>
+            <button type="button" class="btn-secondary" id="keep-shopping-btn">Keep Shopping</button>
         </form>
     </div>
 </div>
@@ -111,39 +133,42 @@
 <div class="modal-overlay" id="success-modal">
     <div class="modal" style="text-align:center;">
         <h2 style="color:green; border:none;">Order Placed!</h2>
-        <p>Your Order Number:</p>
+        <p>Your order number is:</p>
         <h1 id="success-order-id" style="color:green;"></h1>
-        <button class="btn-primary" onclick="location.reload()">Place Another Order</button>
+        <p>Show this QR code or order number at the counter.</p>
+        <div id="upi-msg" style="display:none; background:#fff3cd; padding:10px; border-radius:5px; margin:10px 0;">
+            Please pay to <b>Applez@upi</b> and show receipt at counter.
+        </div>
+        <button class="btn-primary" id="new-order-btn">Place Another Order</button>
     </div>
 </div>
 
 <script>
     // ==========================================
-    // 1. SUPABASE SETUP (THE FIX)
+    // SUPABASE SETUP
     // ==========================================
-    // REPLACE THESE WITH YOUR ACTUAL KEYS
         const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
 
 
-    // Initialize the client correctly
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // ==========================================
-    // 2. APP LOGIC
+    // APP STATE
     // ==========================================
     let cart = [];
     let products = [];
 
-    // Load Products
+    // ==========================================
+    // LOAD PRODUCTS
+    // ==========================================
     async function loadProducts() {
-        // Use 'db' here, not 'supabase'
-        const { data, error } = await db.from('products').select('*').eq('active', true);
+        const { data, error } = await db.from('products').select('*').eq('active', true).order('name');
         
         if (error) {
-            console.error(error);
-            document.getElementById('loading-msg').innerText = 'Error loading products.';
+            console.error('Error:', error);
+            document.getElementById('loading-msg').innerText = 'Failed to load products.';
             return;
         }
         
@@ -154,109 +179,204 @@
 
     function renderProducts() {
         const grid = document.getElementById('products-grid');
+        grid.innerHTML = '';
+        
         products.forEach(p => {
-            const div = document.createElement('div');
-            div.className = 'product-card';
-            div.innerHTML = `
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            
+            let html = `
                 <h3>${p.name}</h3>
-                <p>${p.unit}</p>
-                <div class="price">₹${p.price}</div>
-                <button class="add-btn" onclick="addToCart('${p.id}')">Add</button>
+                <div class="unit">${p.unit}</div>
+                <div class="price">₹${p.price}${p.pricing_type === 'By-Weight' ? ' / kg' : ''}</div>
             `;
-            grid.appendChild(div);
+            
+            if (p.pricing_type === 'By-Weight') {
+                // Show weight buttons for By-Weight products
+                html += `
+                    <div class="weight-options">
+                        <button class="weight-btn" onclick="addToCart('${p.id}', 0.25)">250g</button>
+                        <button class="weight-btn" onclick="addToCart('${p.id}', 0.5)">500g</button>
+                        <button class="weight-btn" onclick="addToCart('${p.id}', 1)">1 kg</button>
+                        <button class="weight-btn" onclick="addToCart('${p.id}', 2)">2 kg</button>
+                        <button class="weight-btn" onclick="addToCart('${p.id}', 5)">5 kg</button>
+                    </div>
+                `;
+            } else {
+                // Simple Add button for Fixed products
+                html += `<button class="add-btn" onclick="addToCart('${p.id}', 1)">Add</button>`;
+            }
+            
+            card.innerHTML = html;
+            grid.appendChild(card);
         });
     }
 
-    window.addToCart = (id) => {
-        const product = products.find(p => p.id === id);
-        const existing = cart.find(item => item.id === id);
-        if (existing) existing.qty++;
-        else cart.push({ ...product, qty: 1 });
+    // ==========================================
+    // CART FUNCTIONS
+    // ==========================================
+    window.addToCart = function(productId, quantityKg) {
+        const product = products.find(p => p.id === productId);
+        
+        // Calculate price based on quantity
+        let price, displayQty, displayUnit;
+        
+        if (product.pricing_type === 'By-Weight') {
+            price = product.price * quantityKg;
+            displayQty = quantityKg;
+            displayUnit = 'kg';
+        } else {
+            price = product.price;
+            displayQty = 1;
+            displayUnit = 'piece';
+        }
+        
+        // Check if item already in cart with same quantity
+        const existing = cart.find(item => item.id === productId && item.qty === quantityKg);
+        
+        if (existing) {
+            existing.count += 1;
+        } else {
+            cart.push({
+                id: productId,
+                name: product.name,
+                price: price,
+                unitPrice: product.price,
+                qty: quantityKg,
+                unit: displayUnit,
+                count: 1
+            });
+        }
+        
+        updateCart();
+    };
+
+    window.removeFromCart = function(index) {
+        cart.splice(index, 1);
         updateCart();
     };
 
     function updateCart() {
-        const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        const count = cart.reduce((sum, item) => sum + item.qty, 0);
+        const total = cart.reduce((sum, item) => sum + (item.price * item.count), 0);
+        const count = cart.reduce((sum, item) => sum + item.count, 0);
         
         document.getElementById('float-total').innerText = total.toFixed(2);
         document.getElementById('float-count').innerText = count;
         document.getElementById('modal-total').innerText = total.toFixed(2);
         
         const list = document.getElementById('cart-items-list');
-        list.innerHTML = cart.map(item => `
-            <div class="cart-item">
-                <span>${item.name} x ${item.qty}</span>
-                <span>₹${(item.price * item.qty).toFixed(2)}</span>
-            </div>
-        `).join('');
+        if (cart.length === 0) {
+            list.innerHTML = '<p>Your cart is empty.</p>';
+        } else {
+            list.innerHTML = cart.map((item, idx) => `
+                <div class="cart-item">
+                    <div>
+                        <b>${item.name}</b><br>
+                        <small>${item.qty} ${item.unit} x ₹${item.unitPrice}/kg = ₹${item.price.toFixed(2)} (x${item.count})</small>
+                    </div>
+                    <button onclick="removeFromCart(${idx})">Remove</button>
+                </div>
+            `).join('');
+        }
     }
 
-    // Modal Controls
-    document.getElementById('open-cart-btn').onclick = () => document.getElementById('cart-modal').classList.add('active');
-    document.getElementById('close-cart-btn').onclick = () => document.getElementById('cart-modal').classList.remove('active');
+    // ==========================================
+    // MODAL CONTROLS
+    // ==========================================
+    document.getElementById('open-cart-btn').addEventListener('click', () => {
+        document.getElementById('cart-modal').classList.add('active');
+    });
+    
+    document.getElementById('close-cart').addEventListener('click', () => {
+        document.getElementById('cart-modal').classList.remove('active');
+    });
+    
+    document.getElementById('keep-shopping-btn').addEventListener('click', () => {
+        document.getElementById('cart-modal').classList.remove('active');
+    });
+    
+    document.getElementById('new-order-btn').addEventListener('click', () => {
+        cart = [];
+        updateCart();
+        document.getElementById('success-modal').classList.remove('active');
+        document.getElementById('order-form').reset();
+    });
 
     // ==========================================
-    // 3. PLACE ORDER (FIXED)
+    // PLACE ORDER
     // ==========================================
     document.getElementById('order-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        if (cart.length === 0) return alert('Cart is empty');
-
-        const btn = e.target.querySelector('button[type="submit"]');
+        if (cart.length === 0) {
+            alert('Your cart is empty!');
+            return;
+        }
+        
+        const btn = document.querySelector('#order-form button[type="submit"]');
         btn.innerText = 'Processing...';
         btn.disabled = true;
-
-        const orderNum = 'ORD-' + Date.now().toString().slice(-6);
-        const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        
+        const orderNumber = 'ORD-' + Date.now().toString().slice(-6);
+        const total = cart.reduce((sum, item) => sum + (item.price * item.count), 0);
         const pickupSlot = `${document.getElementById('pickup-date').value} ${document.getElementById('pickup-time').value}`;
-
+        const paymentMethod = document.getElementById('pay-method').value;
+        
         try {
-            // 1. Insert Order - USE 'db' NOT 'supabase'
+            // Insert Order
             const { data: orderData, error: orderError } = await db
                 .from('orders')
                 .insert([{
-                    order_number: orderNum,
+                    order_number: orderNumber,
                     customer_name: document.getElementById('cust-name').value,
                     customer_phone: document.getElementById('cust-phone').value,
                     pickup_slot: pickupSlot,
-                    payment_method: document.getElementById('pay-method').value,
+                    payment_method: paymentMethod,
                     total: total,
                     note: document.getElementById('order-note').value,
                     status: 'New'
                 }])
                 .select()
                 .single();
-
+            
             if (orderError) throw orderError;
-
-            // 2. Insert Items - USE 'db' NOT 'supabase'
-            const items = cart.map(item => ({
-                order_id: orderData.id,
-                product_id: item.id,
-                product_name: item.name,
-                quantity: item.qty,
-                price_at_order: item.price
-            }));
-
-            const { error: itemsError } = await db.from('order_items').insert(items);
+            
+            // Insert Order Items
+            const orderItems = cart.flatMap(item => {
+                return Array(item.count).fill({
+                    order_id: orderData.id,
+                    product_id: item.id,
+                    product_name: item.name,
+                    quantity: item.qty,
+                    price_at_order: item.unitPrice
+                });
+            });
+            
+            const { error: itemsError } = await db.from('order_items').insert(orderItems);
             if (itemsError) throw itemsError;
-
-            // 3. Success
+            
+            // Show Success
             document.getElementById('cart-modal').classList.remove('active');
-            document.getElementById('success-order-id').innerText = orderNum;
+            document.getElementById('success-order-id').innerText = orderNumber;
+            
+            if (paymentMethod.includes('Advance UPI')) {
+                document.getElementById('upi-msg').style.display = 'block';
+            } else {
+                document.getElementById('upi-msg').style.display = 'none';
+            }
+            
             document.getElementById('success-modal').classList.add('active');
-
+            
         } catch (err) {
-            console.error(err);
-            alert('Error: ' + err.message);
-            btn.innerText = 'Place Order';
-            btn.disabled = false;
+            console.error('Error:', err);
+            alert('Failed to place order: ' + err.message);
         }
+        
+        btn.innerText = 'Place Order';
+        btn.disabled = false;
     });
 
-    // Start
+    // Initialize
     loadProducts();
 </script>
 
