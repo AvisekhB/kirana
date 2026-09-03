@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avisekh Grocery - Order Online</title>
+    <link rel="icon" href="data:,">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f8f9fa; color: #333; }
@@ -112,8 +113,9 @@
 
     <script>
         // ==========================================
-        // PASTE YOUR SUPABASE CREDENTIALS HERE
+        // PASTE YOUR SUPABASE CREDENTIALS HERE (EXACTLY ONCE)
         // ==========================================
+
         const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co/rest/v1/";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -123,7 +125,7 @@
 
         async function init() {
             const { data, error } = await supabase.from('products').select('*').eq('active', true).order('name');
-            if (error) { document.getElementById('products-list').innerHTML = 'Error loading products.'; return; }
+            if (error) { document.getElementById('products-list').innerHTML = 'Error loading products: ' + error.message; return; }
             products = data;
             renderProducts();
             setupDateAndTime();
@@ -196,7 +198,6 @@
         }
 
         function updateCartUI() {
-            const count = cart.reduce((sum, item) => sum + (item.pricing_type === 'Fixed' ? item.quantity : 1), 0);
             const total = cart.reduce((sum, item) => sum + (item.quantity * item.price), 0);
             document.getElementById('cart-count').textContent = cart.length;
             document.getElementById('cart-total').textContent = total.toFixed(2);
@@ -226,7 +227,6 @@
             const timeSelect = document.getElementById('pickup-time');
             for (let h = 9; h <= 19; h++) {
                 for (let m = 0; m < 60; m += 30) {
-                    if (h === 20 && m > 0) break;
                     const hour = h.toString().padStart(2, '0');
                     const min = m.toString().padStart(2, '0');
                     const opt = document.createElement('option');
@@ -265,7 +265,7 @@
             cart = []; updateCartUI(); closeCheckout();
             document.getElementById('success-order-number').textContent = orderNumber;
             document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${orderNumber}`;
-            if(payment.includes('Advance')) document.getElementById('upi-note').style.display = 'block';
+            if (payment.includes('Advance')) document.getElementById('upi-note').style.display = 'block';
             document.getElementById('success-modal').classList.add('active');
         });
 
