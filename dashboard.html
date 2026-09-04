@@ -4,214 +4,269 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avisekh Grocery - Owner Dashboard</title>
-    <link rel="icon" href="data:,">
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f4f4f9; color: #333; }
-        .sidebar { width: 250px; background: #1b5e20; color: white; padding: 2rem 1rem; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; }
-        .sidebar h2 { margin-top: 0; font-size: 1.2rem; border-bottom: 1px solid #ffffff33; padding-bottom: 1rem; margin-bottom: 1rem; }
-        .nav-btn { background: transparent; border: none; color: white; text-align: left; padding: 0.8rem; cursor: pointer; font-size: 1rem; border-radius: 4px; margin-bottom: 0.5rem; }
-        .nav-btn:hover, .nav-btn.active { background: #2e7d32; }
-        .main { margin-left: 250px; padding: 2rem; }
-        .login-box { max-width: 400px; margin: 5rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .hidden { display: none !important; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-top: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; font-weight: bold; }
-        .badge { display: inline-block; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
-        .badge-new { background: #e3f2fd; color: #1565c0; }
-        .badge-packed { background: #fff3e0; color: #e65100; }
-        .badge-picked { background: #e8f5e9; color: #2e7d32; }
-        .btn { padding: 0.4rem 0.8rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; color: white; }
-        .btn-primary { background: #1976d2; }
-        .btn-success { background: #388e3c; }
-        .btn-warning { background: #f57c00; }
-        .order-card { background: white; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 5px solid #1976d2; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .order-card.packed { border-left-color: #f57c00; }
-        .order-card.picked { border-left-color: #388e3c; opacity: 0.7; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
-        input[type="number"] { width: 80px; padding: 0.3rem; }
-    </style>
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800">
 
-    <div id="login-screen" class="login-box">
-        <h2>Owner Login</h2>
-        <form id="login-form">
-            <div style="margin-bottom: 1rem;">
-                <label>Email</label><br>
-                <input type="email" id="email" required style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
-            </div>
-            <div style="margin-bottom: 1rem;">
-                <label>Password</label><br>
-                <input type="password" id="password" required style="width: 100%; padding: 0.5rem; margin-top: 0.25rem;">
-            </div>
-            <button type="submit" class="btn btn-success" style="width: 100%; padding: 0.8rem;">Login</button>
-        </form>
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+            <h2 class="text-2xl font-bold mb-6 text-center">Owner Login</h2>
+            <input type="email" id="login-email" placeholder="Email" class="w-full p-2 border rounded mb-4">
+            <input type="password" id="login-password" placeholder="Password" class="w-full p-2 border rounded mb-4">
+            <button onclick="login()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Login</button>
+        </div>
     </div>
 
+    <!-- Dashboard Screen -->
     <div id="dashboard-screen" class="hidden">
-        <div class="sidebar">
-            <h2>Avisekh Grocery</h2>
-            <button class="nav-btn active" onclick="showTab('orders', this)">Orders</button>
-            <button class="nav-btn" onclick="showTab('inventory', this)">Inventory</button>
-            <button class="nav-btn" onclick="showTab('customers', this)">Customers</button>
-            <button class="nav-btn" onclick="logout()" style="margin-top: auto; background: #c62828;">Logout</button>
-        </div>
-        <div class="main">
-            <div id="tab-orders">
-                <h1>Orders <span style="font-size:0.8rem; color:green;">● Live</span></h1>
-                <div id="orders-container" class="grid"></div>
+        <!-- Header with Shop Status Toggle -->
+        <header class="bg-white shadow p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-blue-700">Avisekh Grocery</h1>
+            <div class="flex items-center space-x-4">
+                <!-- Shop Status Toggle -->
+                <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded-lg border">
+                    <span class="text-sm font-medium">Shop Status:</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="shop-status-toggle" class="sr-only peer" onchange="toggleShopStatus()">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                    </label>
+                    <span id="shop-status-text" class="text-sm font-semibold text-green-600">Open</span>
+                </div>
+                <button onclick="logout()" class="text-red-600 hover:underline">Logout</button>
             </div>
-            <div id="tab-inventory" class="hidden">
-                <h1>Inventory Manager</h1>
-                <table id="inventory-table">
-                    <thead><tr><th>Name</th><th>Type</th><th>Unit</th><th>Price (₹)</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody></tbody>
+        </header>
+
+        <!-- Tabs -->
+        <div class="flex border-b bg-white px-4">
+            <button onclick="showTab('orders')" class="tab-btn px-4 py-2 font-semibold text-blue-600 border-b-2 border-blue-600" data-tab="orders">Orders ● Live</button>
+            <button onclick="showTab('inventory')" class="tab-btn px-4 py-2 text-gray-500 hover:text-gray-700" data-tab="inventory">Inventory</button>
+            <button onclick="showTab('customers')" class="tab-btn px-4 py-2 text-gray-500 hover:text-gray-700" data-tab="customers">Customers</button>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="tab-orders" class="tab-content p-4">
+            <h2 class="text-xl font-bold mb-4">Live Orders</h2>
+            <div class="bg-white rounded-lg shadow overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-3 text-left">Order #</th>
+                            <th class="p-3 text-left">Customer</th>
+                            <th class="p-3 text-left">Phone</th>
+                            <th class="p-3 text-left">Pickup Slot</th>
+                            <th class="p-3 text-left">Total</th>
+                            <th class="p-3 text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body" class="divide-y"></tbody>
                 </table>
             </div>
-            <div id="tab-customers" class="hidden">
-                <h1>Customers (Sorted by Total Spent)</h1>
-                <table id="customers-table">
-                    <thead><tr><th>Name</th><th>Phone</th><th>Total Orders</th><th>Total Spent</th><th>Last Order</th></tr></thead>
-                    <tbody></tbody>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="tab-inventory" class="tab-content hidden p-4">
+            <h2 class="text-xl font-bold mb-4">Inventory Manager</h2>
+            <div class="bg-white rounded-lg shadow overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-3 text-left">Name</th>
+                            <th class="p-3 text-left">Type</th>
+                            <th class="p-3 text-left">Unit</th>
+                            <th class="p-3 text-left">Price (₹)</th>
+                            <th class="p-3 text-left">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-table-body" class="divide-y"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Customers Tab -->
+        <div id="tab-customers" class="tab-content hidden p-4">
+            <h2 class="text-xl font-bold mb-4">Customers (Sorted by Total Spent)</h2>
+            <div class="bg-white rounded-lg shadow overflow-x-auto">
+                <table class="min-w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-3 text-left">Name</th>
+                            <th class="p-3 text-left">Phone</th>
+                            <th class="p-3 text-left">Total Orders</th>
+                            <th class="p-3 text-left">Total Spent</th>
+                            <th class="p-3 text-left">Last Order</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customers-table-body" class="divide-y"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // PASTE YOUR SUPABASE CREDENTIALS HERE (EXACTLY ONCE)
-        // ==========================================
-        const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
-        const { createClient } = window.supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // --- SUPABASE INIT ---
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { error } = await db.auth.signInWithPassword({ email, password });
+        // --- AUTH ---
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) alert(error.message);
-            else loadDashboard();
-        });
-
-        async function checkAuth() {
-            const { data: { session } } = await db.auth.getSession();
-            if (session) loadDashboard();
-        }
-
-        async function loadDashboard() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('dashboard-screen').classList.remove('hidden');
-            fetchOrders();
-            fetchProducts();
-            fetchCustomers();
-
-            db.channel('public:orders')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => { fetchOrders(); })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => { fetchOrders(); })
-                .subscribe();
+            else initDashboard();
         }
 
         async function logout() {
-            await db.auth.signOut();
+            await supabase.auth.signOut();
             location.reload();
         }
 
-        function showTab(tab, btn) {
-            document.querySelectorAll('.main > div').forEach(d => d.classList.add('hidden'));
-            document.getElementById('tab-' + tab).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+        async function initDashboard() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+            
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            
+            loadShopStatus();
+            loadOrders();
+            loadInventory();
+            loadCustomers();
+            
+            // Live Orders Subscription
+            supabase.channel('orders-dashboard')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, loadOrders)
+                .subscribe();
         }
 
-        async function fetchOrders() {
-            const { data } = await db.from('orders').select('*, order_items(*, products(pricing_type))').order('created_at', { ascending: false });
-            if (!data) return;
-            const container = document.getElementById('orders-container');
-            container.innerHTML = '';
-            data.forEach(o => {
-                const statusClass = o.status === 'New' ? '' : o.status.toLowerCase().replace(' ', '');
-                const cardClass = o.status === 'Packed' ? 'packed' : o.status === 'Picked Up' ? 'picked' : '';
-                const badgeClass = o.status === 'New' ? 'badge-new' : o.status === 'Packed' ? 'badge-packed' : 'badge-picked';
-                const nextStatus = o.status === 'New' ? 'Packed' : o.status === 'Packed' ? 'Picked Up' : null;
+        // --- SHOP STATUS TOGGLE ---
+        async function loadShopStatus() {
+            const { data } = await supabase.from('shop_settings').select('value').eq('key', 'is_closed').single();
+            const toggle = document.getElementById('shop-status-toggle');
+            const text = document.getElementById('shop-status-text');
+            
+            if (data && data.value === 'true') {
+                toggle.checked = true;
+                text.innerText = 'Closed';
+                text.className = 'text-sm font-semibold text-red-600';
+            } else {
+                toggle.checked = false;
+                text.innerText = 'Open';
+                text.className = 'text-sm font-semibold text-green-600';
+            }
+        }
 
-                const itemsHtml = o.order_items.map(i => {
-                    const isWeight = i.products && i.products.pricing_type === 'By-Weight';
-                    const qtyStr = isWeight ? (i.quantity < 1 ? `${i.quantity * 1000} g` : `${i.quantity} kg`) : `${i.quantity} × ${i.products ? i.products.unit : 'unit'}`;
-                    return `<li>${i.product_name} — ${qtyStr} — ₹${(i.quantity * i.price_at_order).toFixed(2)}</li>`;
-                }).join('');
+        async function toggleShopStatus() {
+            const toggle = document.getElementById('shop-status-toggle');
+            const text = document.getElementById('shop-status-text');
+            const isClosed = toggle.checked;
+            
+            const { error } = await supabase.from('shop_settings').update({ value: isClosed.toString() }).eq('key', 'is_closed');
+            if (error) {
+                alert('Failed to update shop status');
+                toggle.checked = !isClosed; 
+            } else {
+                text.innerText = isClosed ? 'Closed' : 'Open';
+                text.className = isClosed ? 'text-sm font-semibold text-red-600' : 'text-sm font-semibold text-green-600';
+            }
+        }
 
-                container.innerHTML += `
-                    <div class="order-card ${cardClass}">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem;">
-                            <strong>${o.order_number}</strong>
-                            <span class="badge ${badgeClass}">${o.status}</span>
-                        </div>
-                        <p style="margin:0.25rem 0;"><strong>${o.customer_name}</strong> (${o.customer_phone})</p>
-                        <p style="margin:0.25rem 0; color:#666;">Pickup: ${o.pickup_slot} | Pay: ${o.payment_method}</p>
-                        ${o.note ? `<p style="margin:0.25rem 0; color:#666;">Note: ${o.note}</p>` : ''}
-                        <ul style="margin:0.5rem 0; padding-left:1.5rem;">${itemsHtml}</ul>
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; padding-top:0.5rem; margin-top:0.5rem;">
-                            <strong>Total: ₹${o.total}</strong>
-                            ${nextStatus ? `<button class="btn btn-primary" onclick="updateStatus('${o.id}', '${nextStatus}')">Mark ${nextStatus}</button>` : ''}
-                        </div>
-                    </div>`;
+        // --- TABS ---
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'font-semibold');
+                el.classList.add('text-gray-500');
+            });
+            
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            activeBtn.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'font-semibold');
+            activeBtn.classList.remove('text-gray-500');
+        }
+
+        // --- DATA LOADING ---
+        async function loadOrders() {
+            const { data } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+            const tbody = document.getElementById('orders-table-body');
+            tbody.innerHTML = '';
+            
+            data.forEach(order => {
+                let statusColor = 'bg-gray-200 text-gray-800';
+                if (order.status === 'Packed') statusColor = 'bg-yellow-200 text-yellow-800';
+                if (order.status === 'Picked Up') statusColor = 'bg-green-200 text-green-800';
+
+                // Map DB status to User-Friendly Status
+                let displayStatus = order.status;
+                if(order.status === 'New') displayStatus = 'Order Placed';
+                if(order.status === 'Packed') displayStatus = 'Packing Done';
+                if(order.status === 'Picked Up') displayStatus = 'Pickup Complete';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="p-3 font-mono text-sm">#${order.order_number}</td>
+                        <td class="p-3">${order.customer_name}</td>
+                        <td class="p-3">${order.customer_phone}</td>
+                        <td class="p-3 text-sm">${order.pickup_slot}</td>
+                        <td class="p-3 font-semibold">₹${order.total}</td>
+                        <td class="p-3">
+                            <select onchange="updateOrderStatus('${order.id}', this.value)" class="p-1 rounded border text-sm font-semibold ${statusColor}">
+                                <option value="New" ${order.status === 'New' ? 'selected' : ''}>Order Placed</option>
+                                <option value="Packed" ${order.status === 'Packed' ? 'selected' : ''}>Packing Done</option>
+                                <option value="Picked Up" ${order.status === 'Picked Up' ? 'selected' : ''}>Pickup Complete</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
-        async function updateStatus(id, status) {
-            await db.from('orders').update({ status }).eq('id', id);
+        async function updateOrderStatus(orderId, newStatus) {
+            await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+            loadOrders();
         }
 
-        async function fetchProducts() {
-            const { data } = await db.from('products').select('*').order('name');
-            if (!data) return;
-            const tbody = document.querySelector('#inventory-table tbody');
+        async function loadInventory() {
+            const { data } = await supabase.from('products').select('*').order('name');
+            const tbody = document.getElementById('inventory-table-body');
             tbody.innerHTML = '';
             data.forEach(p => {
                 tbody.innerHTML += `
                     <tr>
-                        <td>${p.name}</td>
-                        <td>${p.pricing_type}</td>
-                        <td>${p.unit}</td>
-                        <td><input type="number" value="${p.price}" onchange="updatePrice('${p.id}', this.value)"> ${p.pricing_type === 'By-Weight' ? '/kg' : ''}</td>
-                        <td><span class="badge ${p.active ? 'badge-picked' : 'badge-packed'}">${p.active ? 'In Stock' : 'Out of Stock'}</span></td>
-                        <td><button class="btn btn-warning" onclick="toggleActive('${p.id}', ${p.active})">${p.active ? 'Mark Out' : 'Mark In'}</button></td>
-                    </tr>`;
+                        <td class="p-3">${p.name}</td>
+                        <td class="p-3 text-sm">${p.pricing_type}</td>
+                        <td class="p-3 text-sm">${p.unit}</td>
+                        <td class="p-3">₹${p.price}</td>
+                        <td class="p-3"><span class="px-2 py-1 rounded text-xs ${p.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${p.active ? 'Active' : 'Inactive'}</span></td>
+                    </tr>
+                `;
             });
         }
 
-        async function updatePrice(id, price) {
-            await db.from('products').update({ price: parseFloat(price) }).eq('id', id);
-        }
-
-        async function toggleActive(id, current) {
-            await db.from('products').update({ active: !current }).eq('id', id);
-            fetchProducts();
-        }
-
-        async function fetchCustomers() {
-            const { data } = await db.from('customers').select('*').order('total_spent', { ascending: false });
-            if (!data) return;
-            const tbody = document.querySelector('#customers-table tbody');
+        async function loadCustomers() {
+            const { data } = await supabase.from('customers').select('*').order('total_spent', { ascending: false });
+            const tbody = document.getElementById('customers-table-body');
             tbody.innerHTML = '';
             data.forEach(c => {
                 tbody.innerHTML += `
                     <tr>
-                        <td>${c.name}</td>
-                        <td>${c.phone}</td>
-                        <td>${c.total_orders}</td>
-                        <td>₹${c.total_spent}</td>
-                        <td>${new Date(c.last_order_date).toLocaleDateString()}</td>
-                    </tr>`;
+                        <td class="p-3">${c.name}</td>
+                        <td class="p-3">${c.phone}</td>
+                        <td class="p-3">${c.total_orders}</td>
+                        <td class="p-3 font-semibold">₹${c.total_spent}</td>
+                        <td class="p-3 text-sm">${new Date(c.last_order_date).toLocaleDateString()}</td>
+                    </tr>
+                `;
             });
         }
 
-        checkAuth();
+        // Auto-init if already logged in
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) initDashboard();
+        });
     </script>
 </body>
 </html>
