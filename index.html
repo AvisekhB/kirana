@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,11 +114,10 @@
     </div>
 
     <script>
-        // --- SUPABASE INIT ---
-
+        // --- SUPABASE INIT (ONLY ONCE) ---
         const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let cart = [];
         let products = [];
@@ -135,7 +133,7 @@
 
         // --- SHOP STATUS CHECK ---
         async function checkShopStatus() {
-            const { data, error } = await supabase.from('shop_settings').select('value').eq('key', 'is_closed').single();
+            const { data, error } = await supabaseClient.from('shop_settings').select('value').eq('key', 'is_closed').single();
             if (data && data.value === 'true') {
                 isShopClosed = true;
                 document.getElementById('shop-closed-banner').classList.remove('hidden');
@@ -147,8 +145,12 @@
 
         // --- PRODUCTS ---
         async function loadProducts() {
-            const { data, error } = await supabase.from('products').select('*').eq('active', true).order('name');
-            if (error) return console.error(error);
+            const { data, error } = await supabaseClient.from('products').select('*').eq('active', true).order('name');
+            if (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('products-grid').innerHTML = '<p class="col-span-full text-center text-red-500">Error loading products. Please refresh.</p>';
+                return;
+            }
             products = data;
             renderProducts();
         }
@@ -164,7 +166,7 @@
                             <p class="text-xs text-gray-500">${p.unit}</p>
                         </div>
                         <div class="mt-2">
-                            <p class="font-bold text-blue-700">₹${p.price}</p>
+                            <p class="font-bold text-blue-700">${p.price}</p>
                             <button onclick="addToCart('${p.id}')" class="mt-2 w-full bg-blue-100 text-blue-700 py-1 rounded text-sm font-semibold hover:bg-blue-200">Add</button>
                         </div>
                     </div>
@@ -230,7 +232,7 @@
             const orderNumber = Math.floor(100000 + Math.random() * 900000).toString();
             const pickupSlot = `${date} ${time}`;
 
-            const { data: orderData, error: orderError } = await supabase.from('orders').insert({
+            const { data: orderData, error: orderError } = await supabaseClient.from('orders').insert({
                 order_number: orderNumber, customer_name: name, customer_phone: phone,
                 pickup_slot: pickupSlot, payment_method: payment, total: total, note: note
             }).select().single();
@@ -242,7 +244,7 @@
                 quantity: item.qty, price_at_order: item.price
             }));
 
-            const { error: itemsError } = await supabase.from('order_items').insert(itemsToInsert);
+            const { error: itemsError } = await supabaseClient.from('order_items').insert(itemsToInsert);
             if (itemsError) return alert('Error saving items: ' + itemsError.message);
 
             // Show Success
@@ -274,7 +276,7 @@
             const phone = document.getElementById('track-phone-input').value.trim();
             if (!phone) return alert('Please enter your phone number');
             
-            const { data, error } = await supabase.rpc('get_user_orders', { p_phone: phone });
+            const { data, error } = await supabaseClient.rpc('get_user_orders', { p_phone: phone });
             const container = document.getElementById('track-order-results');
             container.innerHTML = '';
             
@@ -313,3 +315,4 @@
     </script>
 </body>
 </html>
+      
