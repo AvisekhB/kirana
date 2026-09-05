@@ -2,383 +2,743 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avisekh Grocery - Order Online</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
-        header { background: #2e7d32; color: white; padding: 20px; text-align: center; }
-        header h1 { margin: 0; }
-        .info-bar { background: #e8f5e9; padding: 10px; text-align: center; font-size: 0.9em; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
-        
-        /* Product Grid */
-        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
-        .product-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
-        .product-card h3 { margin: 10px 0; font-size: 1.1em; }
-        .product-card .unit { color: #666; font-size: 0.9em; }
-        .product-card .price { font-weight: bold; color: #2e7d32; font-size: 1.2em; margin: 10px 0; }
-        
-        /* Weight Buttons */
-        .weight-options { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; margin-top: 10px; }
-        .weight-btn { background: #fff; border: 2px solid #2e7d32; color: #2e7d32; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.85em; }
-        .weight-btn:hover { background: #2e7d32; color: white; }
-        
-        /* Fixed Product Add Button */
-        .add-btn { background: #2e7d32; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 10px; font-size: 1em; }
-        .add-btn:hover { background: #1b5e20; }
-        
-        /* Floating Cart */
-        .floating-cart { position: fixed; bottom: 20px; right: 20px; background: #2e7d32; color: white; padding: 15px 25px; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 100; text-align: center; }
-        
-        /* Modal */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-overlay.active { display: flex; }
-        .modal { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
-        .modal h2 { margin-top: 0; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }
-        .close-modal { float: right; font-size: 1.5em; cursor: pointer; }
-        
-        /* Form */
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .btn-primary { background: #2e7d32; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; cursor: pointer; }
-        .btn-secondary { background: white; color: #2e7d32; border: 2px solid #2e7d32; padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; cursor: pointer; margin-top: 10px; }
-        
-        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .cart-item button { background: #d32f2f; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
-        .total-display { font-size: 1.5em; font-weight: bold; text-align: right; margin: 15px 0; color: #2e7d32; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Avisekh Grocery — Order Online, Pick Up In Store</title>
+<style>
+  :root{
+    --cream:#FFF8EF;
+    --cream-dark:#FBEEDD;
+    --brown:#3E5C2A;
+    --brown-dark:#2A3E1D;
+    --terracotta:#D97B4F;
+    --terracotta-dark:#B85E36;
+    --green:#4C8B5C;
+    --line:#EAD9C4;
+    --white:#FFFFFF;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--cream);
+    color:var(--brown-dark);
+    padding-bottom:90px;
+  }
+  header.top{
+    background:var(--brown);
+    color:var(--cream);
+    padding:18px 16px 22px;
+    text-align:center;
+    border-bottom:4px solid var(--terracotta);
+  }
+  header.top h1{margin:0 0 6px;font-size:1.5rem;}
+  header.top p{margin:2px 0;font-size:0.92rem;opacity:0.95;}
+  .badge-closed{
+    display:inline-block;margin-top:8px;background:var(--terracotta-dark);
+    padding:4px 10px;border-radius:20px;font-size:0.8rem;
+  }
+  nav.tabs{
+    display:flex;position:sticky;top:0;z-index:50;background:var(--cream-dark);
+    border-bottom:1px solid var(--line);
+  }
+  nav.tabs button{
+    flex:1;padding:12px;border:none;background:transparent;font-size:0.95rem;
+    font-weight:600;color:var(--brown);cursor:pointer;
+  }
+  nav.tabs button.active{background:var(--terracotta);color:white;}
+  .search-wrap{
+    position:sticky;top:45px;z-index:40;background:var(--cream);
+    padding:10px 14px 6px;max-width:640px;margin:0 auto;
+  }
+  .search-wrap input{
+    width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--line);
+    font-size:0.95rem;font-family:inherit;background:white;
+  }
+  .search-wrap input:focus{outline:none;border-color:var(--terracotta);}
+  main{padding:14px 14px 20px;max-width:640px;margin:0 auto;}
+  .category-title{
+    font-size:1.05rem;margin:22px 0 10px;color:var(--brown);
+    border-bottom:2px solid var(--terracotta);padding-bottom:4px;
+  }
+  .item-card{
+    background:var(--white);border:1px solid var(--line);border-radius:14px;
+    padding:12px 14px;margin-bottom:10px;display:flex;flex-direction:column;gap:8px;
+  }
+  .item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .item-info{flex:1;}
+  .item-info .name{font-weight:700;font-size:1rem;}
+  .item-info .meta{font-size:0.82rem;color:#6a7a5d;margin-top:2px;}
+  .price{font-weight:700;color:var(--terracotta-dark);font-size:1rem;white-space:nowrap;}
+  .tag{
+    display:inline-block;font-size:0.7rem;padding:2px 8px;border-radius:20px;
+    margin-top:4px;margin-right:4px;font-weight:600;
+  }
+  .tag.weight{background:#E3F1E6;color:var(--green);}
+  .tag.fixed{background:#FBEAD9;color:var(--terracotta-dark);}
+  .btn{
+    border:none;border-radius:10px;padding:10px 14px;font-size:0.92rem;font-weight:700;
+    cursor:pointer;
+  }
+  .btn.primary{background:var(--terracotta);color:white;}
+  .btn.primary:active{background:var(--terracotta-dark);}
+  .btn.outline{background:white;border:1.5px solid var(--terracotta);color:var(--terracotta-dark);}
+  .btn.full{width:100%;}
+  .btn.small{padding:6px 10px;font-size:0.82rem;}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .qty-row{display:flex;align-items:center;gap:10px;}
+  .qty-row button{
+    width:32px;height:32px;border-radius:8px;border:1px solid var(--line);
+    background:var(--cream-dark);font-size:1.1rem;cursor:pointer;
+  }
+  .qty-row span{min-width:22px;text-align:center;font-weight:700;}
+  .weight-row select{
+    padding:8px;border-radius:8px;border:1px solid var(--line);font-size:0.9rem;
+    font-family:inherit;
+  }
+  .note-line{font-size:0.78rem;color:#8a6a4d;margin-top:4px;}
+  .cart-bar{
+    position:fixed;bottom:0;left:0;right:0;background:var(--brown);color:white;
+    padding:12px 16px;display:flex;justify-content:space-between;align-items:center;
+    z-index:60;box-shadow:0 -3px 10px rgba(0,0,0,0.15);
+  }
+  .cart-bar.hidden{display:none;}
+  .cart-bar .info{font-size:0.9rem;}
+  .cart-bar button{background:var(--terracotta);color:white;border:none;border-radius:10px;
+    padding:9px 16px;font-weight:700;font-size:0.9rem;cursor:pointer;}
+  .screen{display:none;}
+  .screen.active{display:block;}
+  .cart-item{
+    background:white;border:1px solid var(--line);border-radius:12px;padding:10px 12px;
+    margin-bottom:8px;
+  }
+  .cart-item .row{display:flex;justify-content:space-between;align-items:center;}
+  .cart-item .sub{font-size:0.8rem;color:#8a6a4d;margin-top:3px;}
+  .remove-link{color:var(--terracotta-dark);font-size:0.8rem;font-weight:700;background:none;
+    border:none;cursor:pointer;text-decoration:underline;padding:0;}
+  form.checkout label{display:block;font-weight:600;margin:12px 0 4px;font-size:0.9rem;}
+  form.checkout input, form.checkout select, form.checkout textarea{
+    width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);font-size:0.95rem;
+    font-family:inherit;
+  }
+  .pay-options label{
+    display:flex;align-items:center;gap:8px;font-weight:500;background:white;
+    border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;
+  }
+  .upi-box{background:var(--cream-dark);border-radius:10px;padding:10px;margin-top:6px;font-size:0.85rem;display:none;}
+  .upi-box.open{display:block;}
+  .conf-box{
+    background:white;border:1px solid var(--line);border-radius:16px;padding:20px;
+    text-align:center;margin-top:10px;
+  }
+  .order-id{
+    font-size:1.3rem;font-weight:800;color:var(--terracotta-dark);letter-spacing:1px;
+    margin:8px 0 14px;
+  }
+  canvas#qrCanvas{border:8px solid white;box-shadow:0 0 0 1px var(--line);border-radius:8px;margin:10px auto;}
+  .summary-list{text-align:left;margin-top:14px;}
+  .summary-list .line{border-bottom:1px dashed var(--line);padding:8px 0;font-size:0.9rem;}
+  .wa-note{
+    background:#E3F1E6;border:1px solid var(--green);border-radius:10px;
+    padding:12px;font-size:0.88rem;margin-top:14px;text-align:left;
+  }
+  .wa-note a{color:var(--green);font-weight:700;text-decoration:none;}
+  .disclaimer{
+    background:#FBEAD9;border:1px solid var(--terracotta);border-radius:10px;
+    padding:10px 12px;font-size:0.82rem;color:var(--brown-dark);margin:10px 0 4px;
+  }
+  .empty-msg{text-align:center;color:#6a7a5d;padding:40px 10px;}
+  .back-link{background:none;border:none;color:var(--terracotta-dark);font-weight:700;
+    cursor:pointer;padding:0;font-size:0.9rem;margin-bottom:10px;}
+  .closed-box{
+    background:white;border:2px solid var(--terracotta);border-radius:16px;
+    padding:30px 20px;text-align:center;margin-top:20px;
+  }
+  .closed-box .emoji{font-size:2.5rem;margin-bottom:8px;}
+  .track-form input{
+    width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);
+    font-size:0.95rem;margin-bottom:10px;
+  }
+  .status-track{display:flex;justify-content:space-between;margin:16px 0;position:relative;}
+  .status-track::before{
+    content:"";position:absolute;top:14px;left:8%;right:8%;height:3px;background:var(--line);z-index:0;
+  }
+  .status-step{flex:1;text-align:center;position:relative;z-index:1;}
+  .status-step .dot{
+    width:28px;height:28px;border-radius:50%;background:var(--line);color:white;
+    display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:0.85rem;font-weight:800;
+  }
+  .status-step.done .dot{background:var(--green);}
+  .status-step.current .dot{background:var(--terracotta);}
+  .status-step .label{font-size:0.72rem;color:#6a7a5d;font-weight:600;}
+  .track-order-card{
+    background:white;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;
+  }
+</style>
 </head>
 <body>
 
-<header>
-    <h1>Avisekh Grocery</h1>
-    <p>Order Online, Pick Up In Store</p>
+<header class="top">
+  <h1>🛒 Avisekh Grocery</h1>
+  <p>Burnpur, West Bengal</p>
+  <p>📞 <a href="tel:+919999999999" style="color:inherit;">+91 9999999999</a> &nbsp;|&nbsp; 💬 WhatsApp same number</p>
+  <p>Open daily 9:00 AM – 8:00 PM</p>
+  <span class="badge-closed">Closed on Thursdays</span>
 </header>
-<div class="info-bar">
-    Address: Burnpur, West Bengal | Contact: +91 9999999999 | Hours: 9:00 AM - 8:00 PM (Closed Thursdays)<br>
-    Pickup: Come to the front counter and give your name.
+
+<nav class="tabs">
+  <button id="tabOrderBtn" class="active" onclick="showScreen('order')">🛍️ Order</button>
+  <button id="tabTrackBtn" onclick="showScreen('track')">📦 Track Order</button>
+</nav>
+
+<!-- ORDER SCREEN -->
+<div id="screen-order" class="screen active">
+  <div class="search-wrap">
+    <input type="text" id="productSearch" placeholder="🔍 Search products (e.g. rice, dal, oil)" oninput="renderMenu()">
+  </div>
+  <main id="menuMain">
+    <div class="empty-msg">Loading products…</div>
+  </main>
 </div>
 
-<div class="container">
-    <h2 id="loading-msg" style="text-align:center;">Loading products...</h2>
-    <div class="products-grid" id="products-grid"></div>
+<!-- CART SCREEN -->
+<div id="screen-cart" class="screen">
+  <main>
+    <button class="back-link" onclick="showScreen('order')">← Back to menu</button>
+    <h2 style="color:var(--brown)">Your Cart</h2>
+    <div id="cartList"></div>
+    <button class="btn primary full" style="margin-top:14px;" onclick="showScreen('checkout')" id="toCheckoutBtn">Proceed to Checkout</button>
+  </main>
 </div>
 
-<div class="floating-cart" id="open-cart-btn">
-    Total: ₹<span id="float-total">0</span> | <span id="float-count">0</span> items<br>View Cart & Checkout
+<!-- CHECKOUT SCREEN -->
+<div id="screen-checkout" class="screen">
+  <main>
+    <button class="back-link" onclick="showScreen('cart')">← Back to cart</button>
+    <h2 style="color:var(--brown)">Checkout</h2>
+    <form class="checkout" id="checkoutForm" onsubmit="return submitOrder(event)">
+      <label>Your Name</label>
+      <input type="text" id="custName" required>
+      <label>Phone Number</label>
+      <input type="tel" id="custPhone" pattern="[0-9]{10}" maxlength="10" placeholder="10-digit number" required>
+      <label>Payment Method</label>
+      <div class="pay-options">
+        <label><input type="radio" name="pay" value="Cash at pickup" checked onchange="togglePayInfo()"> Cash at pickup</label>
+        <label><input type="radio" name="pay" value="UPI at pickup" onchange="togglePayInfo()"> UPI at pickup</label>
+        <label><input type="radio" name="pay" value="UPI advance payment" onchange="togglePayInfo()"> Pay in advance via UPI</label>
+      </div>
+      <div class="upi-box" id="upiBox">
+        Send payment to UPI ID: <b>Applez@upi</b><br>
+        Please WhatsApp us a screenshot of the payment after ordering.
+      </div>
+      <label>Pickup Slot</label>
+      <select id="pickupSlot" required></select>
+      <label>Note (optional)</label>
+      <textarea id="custNote" rows="2" placeholder="Any special instructions"></textarea>
+      <div class="disclaimer">
+        Come to the front counter and show your order number and give your name.<br><br>
+        Note: online payment here is not a real charge unless a payment gateway is set up — "Pay in advance via UPI" just shows our UPI ID for you to pay manually and message us a screenshot.
+      </div>
+      <button type="submit" class="btn primary full" style="margin-top:14px;">Place Order</button>
+    </form>
+  </main>
 </div>
 
-<!-- Cart Modal -->
-<div class="modal-overlay" id="cart-modal">
-    <div class="modal">
-        <span class="close-modal" id="close-cart">&times;</span>
-        <h2>Your Cart</h2>
-        <div id="cart-items-list"></div>
-        <div class="total-display">Total: ₹<span id="modal-total">0</span></div>
-        
-        <form id="order-form">
-            <div class="form-group">
-                <label>Your Name</label>
-                <input type="text" id="cust-name" required>
-            </div>
-            <div class="form-group">
-                <label>Phone Number</label>
-                <input type="tel" id="cust-phone" pattern="[0-9]{10}" required>
-            </div>
-            <div class="form-group">
-                <label>Pickup Date</label>
-                <input type="date" id="pickup-date" required>
-            </div>
-            <div class="form-group">
-                <label>Pickup Time</label>
-                <select id="pickup-time" required>
-                    <option value="09:00">09:00</option>
-                    <option value="10:00">10:00</option>
-                    <option value="11:00">11:00</option>
-                    <option value="12:00">12:00</option>
-                    <option value="13:00">13:00</option>
-                    <option value="14:00">14:00</option>
-                    <option value="15:00">15:00</option>
-                    <option value="16:00">16:00</option>
-                    <option value="17:00">17:00</option>
-                    <option value="18:00">18:00</option>
-                    <option value="18:30">18:30</option>
-                    <option value="19:00">19:00</option>
-                    <option value="19:30">19:30</option>
-                    <option value="20:00">20:00</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Payment Method</label>
-                <select id="pay-method" required>
-                    <option value="Cash at pickup">Cash at pickup</option>
-                    <option value="UPI at pickup">UPI at pickup</option>
-                    <option value="Advance UPI (Applez@upi)">Advance UPI (Applez@upi)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Note (Optional)</label>
-                <textarea id="order-note" rows="2"></textarea>
-            </div>
-            <button type="submit" class="btn-primary">Place Order</button>
-            <button type="button" class="btn-secondary" id="keep-shopping-btn">Keep Shopping</button>
-        </form>
+<!-- CONFIRMATION SCREEN -->
+<div id="screen-confirm" class="screen">
+  <main>
+    <div class="conf-box">
+      <div style="font-size:2rem;">✅</div>
+      <h2 style="color:var(--brown);margin:6px 0;">Order Placed!</h2>
+      <div class="order-id" id="confOrderId"></div>
+      <canvas id="qrCanvas" width="160" height="160"></canvas>
+      <div class="summary-list" id="confSummary"></div>
+      <div class="wa-note" id="confWaNote"></div>
+      <button class="btn outline full" style="margin-top:16px;" onclick="showScreen('order')">Back to Menu</button>
     </div>
+  </main>
 </div>
 
-<!-- Success Modal -->
-<div class="modal-overlay" id="success-modal">
-    <div class="modal" style="text-align:center;">
-        <h2 style="color:green; border:none;">Order Placed!</h2>
-        <p>Your order number is:</p>
-        <h1 id="success-order-id" style="color:green;"></h1>
-        <p>Show this QR code or order number at the counter.</p>
-        <div id="upi-msg" style="display:none; background:#fff3cd; padding:10px; border-radius:5px; margin:10px 0;">
-            Please pay to <b>Applez@upi</b> and show receipt at counter.
-        </div>
-        <button class="btn-primary" id="new-order-btn">Place Another Order</button>
+<!-- TRACK ORDER SCREEN -->
+<div id="screen-track" class="screen">
+  <main>
+    <h2 style="color:var(--brown)">Track Your Order</h2>
+    <div class="track-form">
+      <input type="text" id="trackInput" placeholder="Enter your Order ID or 10-digit phone number">
+      <button class="btn primary full" onclick="trackOrder()">Check Status</button>
     </div>
+    <div id="trackResults"></div>
+  </main>
 </div>
 
+<!-- CART BAR -->
+<div class="cart-bar hidden" id="cartBar">
+  <div class="info" id="cartBarInfo">0 items · ₹0</div>
+  <button onclick="showScreen('cart')">View Cart</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-    // ==========================================
-    // SUPABASE SETUP
-    // ==========================================
-        const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
+/* ================= SUPABASE SETUP ================= */
+const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
 
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const { createClient } = supabase;
-    const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SHOP_WHATSAPP = "919999999999"; // country code + number, no + or spaces
 
-    // ==========================================
-    // APP STATE
-    // ==========================================
-    let cart = [];
-    let products = [];
+/* ================= WEIGHT OPTIONS ================= */
+// Assumption (UI convenience only, not fabricated product data): these are the
+// selectable weight amounts offered for any "By-Weight" product.
+const WEIGHT_OPTIONS_KG = [
+  {label:"100 g", value:0.1},
+  {label:"250 g", value:0.25},
+  {label:"500 g", value:0.5},
+  {label:"1 kg",  value:1},
+  {label:"2 kg",  value:2},
+  {label:"5 kg",  value:5}
+];
+const WEIGHT_OPTIONS_L = [
+  {label:"250 ml", value:0.25},
+  {label:"500 ml", value:0.5},
+  {label:"1 L",    value:1},
+  {label:"2 L",    value:2}
+];
 
-    // ==========================================
-    // LOAD PRODUCTS
-    // ==========================================
-    async function loadProducts() {
-        const { data, error } = await db.from('products').select('*').eq('active', true).order('name');
-        
-        if (error) {
-            console.error('Error:', error);
-            document.getElementById('loading-msg').innerText = 'Failed to load products.';
-            return;
-        }
-        
-        products = data;
-        document.getElementById('loading-msg').style.display = 'none';
-        renderProducts();
+let products = [];
+let cart = []; // {product_id, name, pricing_type, unitPrice, quantity, measure_unit, lineTotal}
+
+/* ================= SHOP OPEN/CLOSED CHECK ================= */
+async function checkShopStatus(){
+  const { data, error } = await sb.from('shop_settings').select('*').eq('id',1).single();
+  if(error || !data){
+    console.error(error);
+    return { is_open: true, closed_message: "" }; // fail-open so a settings error doesn't block browsing
+  }
+  return data;
+}
+
+/* ================= LOAD PRODUCTS ================= */
+async function loadProducts(){
+  const { data, error } = await sb.from('products').select('*').eq('active', true).order('category');
+  if(error){ console.error(error); return null; }
+  return data;
+}
+
+function formatPrice(p){
+  if(p.pricing_type === 'Fixed'){
+    return `₹${p.price} <span class="note-line" style="display:inline">/ ${p.pack_label}</span>`;
+  }
+  return `₹${p.price} / ${p.measure_unit}`;
+}
+
+function renderMenu(){
+  const main = document.getElementById('menuMain');
+  main.innerHTML = "";
+  const searchInput = document.getElementById('productSearch');
+  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+  const filtered = query
+    ? products.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query))
+    : products;
+
+  if(filtered.length === 0){
+    main.innerHTML = `<div class="empty-msg">No products match "${query}". Try a different search.</div>`;
+    return;
+  }
+
+  const byCategory = {};
+  filtered.forEach(p=>{
+    if(!byCategory[p.category]) byCategory[p.category] = [];
+    byCategory[p.category].push(p);
+  });
+  Object.keys(byCategory).sort().forEach(cat=>{
+    const title = document.createElement('div');
+    title.className = 'category-title';
+    title.textContent = cat;
+    main.appendChild(title);
+    byCategory[cat].forEach(p=>{
+      const card = document.createElement('div');
+      card.className = 'item-card';
+      const tag = p.pricing_type === 'Fixed'
+        ? `<span class="tag fixed">Fixed pack</span>`
+        : `<span class="tag weight">Sold by weight</span>`;
+      let controlHtml = "";
+      if(p.pricing_type === 'Fixed'){
+        controlHtml = `
+          <div class="qty-row">
+            <button type="button" onclick="stepQty('${p.id}',-1)">−</button>
+            <span id="qty-${p.id}">0</span>
+            <button type="button" onclick="stepQty('${p.id}',1)">+</button>
+          </div>
+          <button class="btn primary small" onclick="addFixedToCart('${p.id}')">Add to Cart</button>
+        `;
+      } else {
+        const opts = (p.measure_unit === 'kg' ? WEIGHT_OPTIONS_KG : WEIGHT_OPTIONS_L)
+          .map(o=>`<option value="${o.value}">${o.label}</option>`).join("");
+        controlHtml = `
+          <div class="weight-row">
+            <select id="weight-${p.id}">${opts}</select>
+          </div>
+          <button class="btn primary small" onclick="addWeightToCart('${p.id}')">Add to Cart</button>
+        `;
+      }
+      card.innerHTML = `
+        <div class="item-top">
+          <div class="item-info">
+            <div class="name">${p.name}</div>
+            <div class="meta">${tag}</div>
+          </div>
+          <div class="price">${formatPrice(p)}</div>
+        </div>
+        ${controlHtml}
+      `;
+      main.appendChild(card);
+    });
+  });
+}
+
+const fixedQtyState = {};
+function stepQty(productId, delta){
+  const cur = fixedQtyState[productId] || 0;
+  const next = Math.max(0, cur + delta);
+  fixedQtyState[productId] = next;
+  document.getElementById('qty-'+productId).textContent = next;
+}
+
+function addFixedToCart(productId){
+  const qty = fixedQtyState[productId] || 0;
+  if(qty <= 0){ alert("Choose a quantity first (use the + button)."); return; }
+  const p = products.find(x=>x.id===productId);
+  cart.push({
+    product_id: p.id,
+    name: p.name,
+    pricing_type: 'Fixed',
+    unitPrice: p.price,
+    quantity: qty,
+    measure_unit: null,
+    lineTotal: p.price * qty
+  });
+  fixedQtyState[productId] = 0;
+  document.getElementById('qty-'+productId).textContent = 0;
+  renderCartBar();
+  alert(`${p.name} × ${qty} added to cart.`);
+}
+
+function addWeightToCart(productId){
+  const sel = document.getElementById('weight-'+productId);
+  const weight = parseFloat(sel.value);
+  const p = products.find(x=>x.id===productId);
+  cart.push({
+    product_id: p.id,
+    name: p.name,
+    pricing_type: 'By-Weight',
+    unitPrice: p.price,
+    quantity: weight,
+    measure_unit: p.measure_unit,
+    lineTotal: p.price * weight
+  });
+  renderCartBar();
+  const label = sel.options[sel.selectedIndex].text;
+  alert(`${p.name} (${label}) added to cart.`);
+}
+
+function renderCartBar(){
+  const bar = document.getElementById('cartBar');
+  if(cart.length === 0){ bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden');
+  const totalItems = cart.length;
+  const totalPrice = cartTotal();
+  document.getElementById('cartBarInfo').textContent = `${totalItems} item${totalItems>1?'s':''} · ₹${totalPrice}`;
+}
+
+function renderCart(){
+  const list = document.getElementById('cartList');
+  list.innerHTML = "";
+  if(cart.length === 0){
+    list.innerHTML = `<div class="empty-msg">Your cart is empty.</div>`;
+    document.getElementById('toCheckoutBtn').style.display = 'none';
+    return;
+  }
+  document.getElementById('toCheckoutBtn').style.display = 'block';
+  cart.forEach((c, idx)=>{
+    const div = document.createElement('div');
+    div.className = 'cart-item';
+    const subLine = c.pricing_type === 'Fixed'
+      ? `${c.quantity} × ₹${c.unitPrice}`
+      : `${c.quantity} ${c.measure_unit} × ₹${c.unitPrice}/${c.measure_unit}`;
+    div.innerHTML = `
+      <div class="row">
+        <b>${c.name}</b>
+        <span>₹${c.lineTotal}</span>
+      </div>
+      <div class="sub">${subLine}</div>
+      <button class="remove-link" onclick="removeCartItem(${idx})">Remove</button>
+    `;
+    list.appendChild(div);
+  });
+}
+function removeCartItem(idx){
+  cart.splice(idx,1);
+  renderCart();
+  renderCartBar();
+}
+function cartTotal(){
+  return cart.reduce((sum,c)=>sum + c.lineTotal, 0);
+}
+
+/* ================= PICKUP SLOTS ================= */
+function buildPickupSlots(){
+  const select = document.getElementById('pickupSlot');
+  select.innerHTML = "";
+  const startHour = 9, endHour = 20; // 9:00 AM to 8:00 PM
+  const days = ["Today","Tomorrow"];
+  days.forEach(dayLabel=>{
+    for(let h=startHour; h<endHour; h++){
+      [0,30].forEach(m=>{
+        const hour12 = ((h % 12) === 0) ? 12 : (h % 12);
+        const ampm = h < 12 ? "AM" : "PM";
+        const mm = m === 0 ? "00" : "30";
+        const label = `${dayLabel}, ${hour12}:${mm} ${ampm}`;
+        const opt = document.createElement('option');
+        opt.value = label;
+        opt.textContent = label;
+        select.appendChild(opt);
+      });
     }
+  });
+}
 
-    function renderProducts() {
-        const grid = document.getElementById('products-grid');
-        grid.innerHTML = '';
-        
-        products.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            
-            let html = `
-                <h3>${p.name}</h3>
-                <div class="unit">${p.unit}</div>
-                <div class="price">₹${p.price}${p.pricing_type === 'By-Weight' ? ' / kg' : ''}</div>
-            `;
-            
-            if (p.pricing_type === 'By-Weight') {
-                // Show weight buttons for By-Weight products
-                html += `
-                    <div class="weight-options">
-                        <button class="weight-btn" onclick="addToCart('${p.id}', 0.25)">250g</button>
-                        <button class="weight-btn" onclick="addToCart('${p.id}', 0.5)">500g</button>
-                        <button class="weight-btn" onclick="addToCart('${p.id}', 1)">1 kg</button>
-                        <button class="weight-btn" onclick="addToCart('${p.id}', 2)">2 kg</button>
-                        <button class="weight-btn" onclick="addToCart('${p.id}', 5)">5 kg</button>
-                    </div>
-                `;
-            } else {
-                // Simple Add button for Fixed products
-                html += `<button class="add-btn" onclick="addToCart('${p.id}', 1)">Add</button>`;
-            }
-            
-            card.innerHTML = html;
-            grid.appendChild(card);
-        });
+function togglePayInfo(){
+  const val = document.querySelector('input[name="pay"]:checked').value;
+  document.getElementById('upiBox').classList.toggle('open', val === 'UPI advance payment');
+}
+
+/* ================= CHECKOUT / ORDER ================= */
+function generateOrderNumber(){
+  return "AVG" + Date.now().toString().slice(-6) + Math.floor(Math.random()*90+10);
+}
+
+async function submitOrder(e){
+  e.preventDefault();
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const pay = document.querySelector('input[name="pay"]:checked').value;
+  const pickupSlot = document.getElementById('pickupSlot').value;
+  const note = document.getElementById('custNote').value.trim();
+  const submitBtn = document.querySelector('#checkoutForm button[type="submit"]');
+
+  if(cart.length === 0){ alert("Your cart is empty."); return false; }
+
+  const orderNumber = generateOrderNumber();
+  const total = cartTotal();
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Placing order...";
+
+  const { data: orderRow, error: orderErr } = await sb.from('orders').insert([{
+    order_number: orderNumber,
+    customer_name: name,
+    customer_phone: phone,
+    pickup_slot: pickupSlot,
+    payment_method: pay,
+    status: 'Order Placed',
+    total: total,
+    note: note || null
+  }]).select().single();
+
+  if(orderErr || !orderRow){
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Place Order";
+    const detail = orderErr ? (orderErr.message || JSON.stringify(orderErr)) : "No order returned";
+    alert("Sorry, we couldn't save your order online right now (" + detail + "). Please try again, or message us directly on WhatsApp: +91 9999999999.");
+    console.error(orderErr);
+    return false;
+  }
+
+  const itemRows = cart.map(c=>({
+    order_id: orderRow.id,
+    product_id: c.product_id,
+    product_name: c.name,
+    pricing_type: c.pricing_type,
+    quantity: c.quantity,
+    measure_unit: c.measure_unit,
+    price_at_order: c.unitPrice,
+    line_total: c.lineTotal
+  }));
+
+  const { error: itemsErr } = await sb.from('order_items').insert(itemRows);
+
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Place Order";
+
+  if(itemsErr){
+    const detail = itemsErr.message || JSON.stringify(itemsErr);
+    alert("Your order was started but items couldn't be saved (" + detail + "). Please message us on WhatsApp with your details: +91 9999999999.");
+    console.error(itemsErr);
+    return false;
+  }
+
+  showConfirmation(orderRow, cart);
+  cart = [];
+  renderCartBar();
+  document.getElementById('checkoutForm').reset();
+  document.getElementById('upiBox').classList.remove('open');
+  return false;
+}
+
+function showConfirmation(order, items){
+  document.getElementById('confOrderId').textContent = "Order ID: " + order.order_number;
+  const summary = document.getElementById('confSummary');
+  let html = "";
+  items.forEach(c=>{
+    const sub = c.pricing_type === 'Fixed' ? `× ${c.quantity}` : `${c.quantity} ${c.measure_unit}`;
+    html += `<div class="line"><b>${c.name}</b> ${sub} — ₹${c.lineTotal}</div>`;
+  });
+  html += `<div class="line"><b>Pickup:</b> ${order.pickup_slot}</div>`;
+  html += `<div class="line"><b>Total:</b> ₹${order.total}</div>`;
+  html += `<div class="line"><b>Payment:</b> ${order.payment_method}</div>`;
+  if(order.note) html += `<div class="line"><b>Note:</b> ${order.note}</div>`;
+  summary.innerHTML = html;
+
+  const waText = encodeURIComponent(`Hi, my Order ID is ${order.order_number}. Please confirm my order.`);
+  document.getElementById('confWaNote').innerHTML =
+    `📩 For quick assistance, please <a href="https://wa.me/${SHOP_WHATSAPP}?text=${waText}" target="_blank">WhatsApp us your Order ID</a>: <b>${order.order_number}</b>`;
+
+  drawOrderCode(order.order_number);
+  showScreen('confirm');
+}
+
+/* Simple deterministic visual "pickup code" grid based on the Order ID.
+   This is a scannable-looking pattern for quick counter reference, not a
+   third-party barcode standard (no external libraries used). */
+function drawOrderCode(text){
+  const canvas = document.getElementById('qrCanvas');
+  const ctx = canvas.getContext('2d');
+  const size = 160, cells = 16, cell = size/cells;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0,0,size,size);
+  let seed = 0;
+  for(let i=0;i<text.length;i++) seed = (seed*31 + text.charCodeAt(i)) >>> 0;
+  function rand(){
+    seed = (seed*1103515245 + 12345) >>> 0;
+    return (seed >>> 8) % 1000 / 1000;
+  }
+  ctx.fillStyle = "#2A3E1D";
+  for(let y=0;y<cells;y++){
+    for(let x=0;x<cells;x++){
+      if(rand() > 0.55){
+        ctx.fillRect(x*cell, y*cell, cell, cell);
+      }
     }
+  }
+  [[0,0],[cells-4,0],[0,cells-4]].forEach(([cx,cy])=>{
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(cx*cell, cy*cell, cell*4, cell*4);
+    ctx.fillStyle = "#2A3E1D";
+    ctx.fillRect(cx*cell, cy*cell, cell*4, cell*4);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect((cx+0.7)*cell, (cy+0.7)*cell, cell*2.6, cell*2.6);
+    ctx.fillStyle = "#2A3E1D";
+    ctx.fillRect((cx+1.3)*cell, (cy+1.3)*cell, cell*1.4, cell*1.4);
+  });
+}
 
-    // ==========================================
-    // CART FUNCTIONS
-    // ==========================================
-    window.addToCart = function(productId, quantityKg) {
-        const product = products.find(p => p.id === productId);
-        
-        // Calculate price based on quantity
-        let price, displayQty, displayUnit;
-        
-        if (product.pricing_type === 'By-Weight') {
-            price = product.price * quantityKg;
-            displayQty = quantityKg;
-            displayUnit = 'kg';
-        } else {
-            price = product.price;
-            displayQty = 1;
-            displayUnit = 'piece';
-        }
-        
-        // Check if item already in cart with same quantity
-        const existing = cart.find(item => item.id === productId && item.qty === quantityKg);
-        
-        if (existing) {
-            existing.count += 1;
-        } else {
-            cart.push({
-                id: productId,
-                name: product.name,
-                price: price,
-                unitPrice: product.price,
-                qty: quantityKg,
-                unit: displayUnit,
-                count: 1
-            });
-        }
-        
-        updateCart();
-    };
+/* ================= TRACK ORDER ================= */
+const STATUS_FLOW = ["Order Placed","Packing Done","Picked Up"];
 
-    window.removeFromCart = function(index) {
-        cart.splice(index, 1);
-        updateCart();
-    };
+async function trackOrder(){
+  const input = document.getElementById('trackInput').value.trim();
+  const resultsBox = document.getElementById('trackResults');
+  if(!input){ resultsBox.innerHTML = `<div class="empty-msg">Enter an Order ID or phone number.</div>`; return; }
+  resultsBox.innerHTML = `<div class="empty-msg">Searching…</div>`;
 
-    function updateCart() {
-        const total = cart.reduce((sum, item) => sum + (item.price * item.count), 0);
-        const count = cart.reduce((sum, item) => sum + item.count, 0);
-        
-        document.getElementById('float-total').innerText = total.toFixed(2);
-        document.getElementById('float-count').innerText = count;
-        document.getElementById('modal-total').innerText = total.toFixed(2);
-        
-        const list = document.getElementById('cart-items-list');
-        if (cart.length === 0) {
-            list.innerHTML = '<p>Your cart is empty.</p>';
-        } else {
-            list.innerHTML = cart.map((item, idx) => `
-                <div class="cart-item">
-                    <div>
-                        <b>${item.name}</b><br>
-                        <small>${item.qty} ${item.unit} x ₹${item.unitPrice}/kg = ₹${item.price.toFixed(2)} (x${item.count})</small>
-                    </div>
-                    <button onclick="removeFromCart(${idx})">Remove</button>
-                </div>
-            `).join('');
-        }
-    }
+  let orders = [];
+  const looksLikePhone = /^[0-9]{10}$/.test(input);
 
-    // ==========================================
-    // MODAL CONTROLS
-    // ==========================================
-    document.getElementById('open-cart-btn').addEventListener('click', () => {
-        document.getElementById('cart-modal').classList.add('active');
-    });
-    
-    document.getElementById('close-cart').addEventListener('click', () => {
-        document.getElementById('cart-modal').classList.remove('active');
-    });
-    
-    document.getElementById('keep-shopping-btn').addEventListener('click', () => {
-        document.getElementById('cart-modal').classList.remove('active');
-    });
-    
-    document.getElementById('new-order-btn').addEventListener('click', () => {
-        cart = [];
-        updateCart();
-        document.getElementById('success-modal').classList.remove('active');
-        document.getElementById('order-form').reset();
-    });
+  if(looksLikePhone){
+    const { data, error } = await sb.from('orders')
+      .select('*').eq('customer_phone', input)
+      .order('created_at', {ascending:false}).limit(5);
+    if(error){ console.error(error); resultsBox.innerHTML = `<div class="empty-msg">Something went wrong. Try again.</div>`; return; }
+    orders = data || [];
+  } else {
+    const { data, error } = await sb.from('orders')
+      .select('*').ilike('order_number', input)
+      .limit(1);
+    if(error){ console.error(error); resultsBox.innerHTML = `<div class="empty-msg">Something went wrong. Try again.</div>`; return; }
+    orders = data || [];
+  }
 
-    // ==========================================
-    // PLACE ORDER
-    // ==========================================
-    document.getElementById('order-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        if (cart.length === 0) {
-            alert('Your cart is empty!');
-            return;
-        }
-        
-        const btn = document.querySelector('#order-form button[type="submit"]');
-        btn.innerText = 'Processing...';
-        btn.disabled = true;
-        
-        const orderNumber = 'ORD-' + Date.now().toString().slice(-6);
-        const total = cart.reduce((sum, item) => sum + (item.price * item.count), 0);
-        const pickupSlot = `${document.getElementById('pickup-date').value} ${document.getElementById('pickup-time').value}`;
-        const paymentMethod = document.getElementById('pay-method').value;
-        
-        try {
-            // Insert Order
-            const { data: orderData, error: orderError } = await db
-                .from('orders')
-                .insert([{
-                    order_number: orderNumber,
-                    customer_name: document.getElementById('cust-name').value,
-                    customer_phone: document.getElementById('cust-phone').value,
-                    pickup_slot: pickupSlot,
-                    payment_method: paymentMethod,
-                    total: total,
-                    note: document.getElementById('order-note').value,
-                    status: 'New'
-                }])
-                .select()
-                .single();
-            
-            if (orderError) throw orderError;
-            
-            // Insert Order Items
-            const orderItems = cart.flatMap(item => {
-                return Array(item.count).fill({
-                    order_id: orderData.id,
-                    product_id: item.id,
-                    product_name: item.name,
-                    quantity: item.qty,
-                    price_at_order: item.unitPrice
-                });
-            });
-            
-            const { error: itemsError } = await db.from('order_items').insert(orderItems);
-            if (itemsError) throw itemsError;
-            
-            // Show Success
-            document.getElementById('cart-modal').classList.remove('active');
-            document.getElementById('success-order-id').innerText = orderNumber;
-            
-            if (paymentMethod.includes('Advance UPI')) {
-                document.getElementById('upi-msg').style.display = 'block';
-            } else {
-                document.getElementById('upi-msg').style.display = 'none';
-            }
-            
-            document.getElementById('success-modal').classList.add('active');
-            
-        } catch (err) {
-            console.error('Error:', err);
-            alert('Failed to place order: ' + err.message);
-        }
-        
-        btn.innerText = 'Place Order';
-        btn.disabled = false;
-    });
+  if(orders.length === 0){
+    resultsBox.innerHTML = `<div class="empty-msg">No matching orders found. Check the Order ID or phone number and try again.</div>`;
+    return;
+  }
 
-    // Initialize
-    loadProducts();
+  resultsBox.innerHTML = "";
+  orders.forEach(o=>{
+    const card = document.createElement('div');
+    card.className = 'track-order-card';
+    const currentIdx = STATUS_FLOW.indexOf(o.status);
+    let stepsHtml = STATUS_FLOW.map((s, i)=>{
+      let cls = "";
+      if(i < currentIdx) cls = "done";
+      else if(i === currentIdx) cls = "current";
+      const icon = i < currentIdx ? "✓" : (i+1);
+      return `<div class="status-step ${cls}"><div class="dot">${icon}</div><div class="label">${s}</div></div>`;
+    }).join("");
+    card.innerHTML = `
+      <b>${o.order_number}</b> — ₹${o.total}<br>
+      <span class="note-line">Placed ${new Date(o.created_at).toLocaleString()}</span>
+      <div class="status-track">${stepsHtml}</div>
+    `;
+    resultsBox.appendChild(card);
+  });
+}
+
+/* ================= NAVIGATION ================= */
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('tabOrderBtn').classList.toggle('active', name==='order');
+  document.getElementById('tabTrackBtn').classList.toggle('active', name==='track');
+  const bar = document.getElementById('cartBar');
+  if(name==='order'){ renderCartBar(); }
+  else { bar.classList.add('hidden'); }
+  if(name==='cart') renderCart();
+  window.scrollTo(0,0);
+}
+
+/* ================= INIT ================= */
+async function init(){
+  buildPickupSlots();
+  const settings = await checkShopStatus();
+  const main = document.getElementById('menuMain');
+  if(!settings.is_open){
+    document.querySelector('.search-wrap').style.display = 'none';
+    main.innerHTML = `
+      <div class="closed-box">
+        <div class="emoji">😴</div>
+        <h2 style="color:var(--brown);margin:6px 0;">Sorry, We're Closed</h2>
+        <p>${settings.closed_message || "Sorry, the shop is closed right now. Please visit again later."}</p>
+      </div>
+    `;
+    // Still allow order tracking even when closed
+    return;
+  }
+  const data = await loadProducts();
+  if(data === null){
+    main.innerHTML = `<div class="empty-msg">Couldn't load products. Check your internet connection and reload the page.</div>`;
+    return;
+  }
+  products = data;
+  if(products.length === 0){
+    main.innerHTML = `<div class="empty-msg">No products available right now.</div>`;
+    return;
+  }
+  renderMenu();
+}
+init();
 </script>
-
 </body>
 </html>
