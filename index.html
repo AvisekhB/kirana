@@ -47,15 +47,6 @@
     font-weight:600;color:var(--brown);cursor:pointer;
   }
   nav.tabs button.active{background:var(--terracotta);color:white;}
-  .search-wrap{
-    position:sticky;top:45px;z-index:40;background:var(--cream);
-    padding:10px 14px 6px;max-width:640px;margin:0 auto;
-  }
-  .search-wrap input{
-    width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--line);
-    font-size:0.95rem;font-family:inherit;background:white;
-  }
-  .search-wrap input:focus{outline:none;border-color:var(--terracotta);}
   main{padding:14px 14px 20px;max-width:640px;margin:0 auto;}
   .category-title{
     font-size:1.05rem;margin:22px 0 10px;color:var(--brown);
@@ -193,9 +184,6 @@
 
 <!-- ORDER SCREEN -->
 <div id="screen-order" class="screen active">
-  <div class="search-wrap">
-    <input type="text" id="productSearch" placeholder="🔍 Search products (e.g. rice, dal, oil)" oninput="renderMenu()">
-  </div>
   <main id="menuMain">
     <div class="empty-msg">Loading products…</div>
   </main>
@@ -280,8 +268,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= SUPABASE SETUP ================= */
-const SUPABASE_URL = "https://makoyqtelhqemvyabvxs.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ha295cXRlbGhxZW12eWFidnhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg0MDI3NzgsImV4cCI6MjEwMzk3ODc3OH0.4VjPjWWav5vBWI5klAPb24NiHPXDQPoioOxJL3yHPoc";
+        const SUPABASE_URL = "https://gfkugbrvqigrgoijraps.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdma3VnYnJ2cWlncmdvaWpyYXBzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1OTIxODIsImV4cCI6MjEwNDE2ODE4Mn0.-b4ix5HNaYpxLq6v7OOcCQ-IvtSwwN0eVu9GhriY1FI";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const SHOP_WHATSAPP = "919999999999"; // country code + number, no + or spaces
@@ -334,19 +322,8 @@ function formatPrice(p){
 function renderMenu(){
   const main = document.getElementById('menuMain');
   main.innerHTML = "";
-  const searchInput = document.getElementById('productSearch');
-  const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
-  const filtered = query
-    ? products.filter(p => p.name.toLowerCase().includes(query) || p.category.toLowerCase().includes(query))
-    : products;
-
-  if(filtered.length === 0){
-    main.innerHTML = `<div class="empty-msg">No products match "${query}". Try a different search.</div>`;
-    return;
-  }
-
   const byCategory = {};
-  filtered.forEach(p=>{
+  products.forEach(p=>{
     if(!byCategory[p.category]) byCategory[p.category] = [];
     byCategory[p.category].push(p);
   });
@@ -548,8 +525,7 @@ async function submitOrder(e){
   if(orderErr || !orderRow){
     submitBtn.disabled = false;
     submitBtn.textContent = "Place Order";
-    const detail = orderErr ? (orderErr.message || JSON.stringify(orderErr)) : "No order returned";
-    alert("Sorry, we couldn't save your order online right now (" + detail + "). Please try again, or message us directly on WhatsApp: +91 9999999999.");
+    alert("Sorry, we couldn't save your order online right now. Please try again, or message us directly on WhatsApp: +91 9999999999.");
     console.error(orderErr);
     return false;
   }
@@ -571,8 +547,7 @@ async function submitOrder(e){
   submitBtn.textContent = "Place Order";
 
   if(itemsErr){
-    const detail = itemsErr.message || JSON.stringify(itemsErr);
-    alert("Your order was started but items couldn't be saved (" + detail + "). Please message us on WhatsApp with your details: +91 9999999999.");
+    alert("Your order was started but items couldn't be saved. Please message us on WhatsApp with your details: +91 9999999999.");
     console.error(itemsErr);
     return false;
   }
@@ -713,7 +688,6 @@ async function init(){
   const settings = await checkShopStatus();
   const main = document.getElementById('menuMain');
   if(!settings.is_open){
-    document.querySelector('.search-wrap').style.display = 'none';
     main.innerHTML = `
       <div class="closed-box">
         <div class="emoji">😴</div>
